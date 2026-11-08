@@ -1,0 +1,285 @@
+{
+ "chars": {
+  "lang-van": {
+   "clips": {
+    "idle": {
+     "file": "lang-van-idle.webp",
+     "frames": 15,
+     "cols": 6,
+     "w": 94,
+     "h": 100,
+     "ms": 140,
+     "pivotX": 49.0,
+     "footY": 97.9
+    },
+    "run": {
+     "file": "lang-van-run.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 105,
+     "h": 97,
+     "ms": 75,
+     "pivotX": 51.0,
+     "footY": 94.4
+    },
+    "basic": {
+     "file": "lang-van-basic.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 182,
+     "h": 104,
+     "ms": 70,
+     "pivotX": 77.5,
+     "footY": 96.4
+    },
+    "ultimate": {
+     "file": "lang-van-ultimate.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 188,
+     "h": 110,
+     "ms": 70,
+     "pivotX": 94.0,
+     "footY": 101.4
+    },
+    "hit": {
+     "file": "lang-van-hit.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 94,
+     "h": 95,
+     "ms": 50,
+     "pivotX": 47.0,
+     "footY": 93.9
+    },
+    "fall-die": {
+     "file": "lang-van-fall-die.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 99,
+     "h": 95,
+     "ms": 80,
+     "pivotX": 51.5,
+     "footY": 92.4
+    }
+   }
+  },
+  "tinh-mac": {
+   "clips": {
+    "idle": {
+     "file": "tinh-mac-idle.webp",
+     "frames": 15,
+     "cols": 6,
+     "w": 114,
+     "h": 104,
+     "ms": 140,
+     "pivotX": 63.5,
+     "footY": 102.5
+    },
+    "run": {
+     "file": "tinh-mac-run.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 112,
+     "h": 94,
+     "ms": 75,
+     "pivotX": 50.5,
+     "footY": 92.0
+    },
+    "basic": {
+     "file": "tinh-mac-basic.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 146,
+     "h": 104,
+     "ms": 70,
+     "pivotX": 64.5,
+     "footY": 102.0
+    },
+    "hit": {
+     "file": "tinh-mac-hit.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 118,
+     "h": 104,
+     "ms": 50,
+     "pivotX": 66.0,
+     "footY": 102.0
+    },
+    "fall-die": {
+     "file": "tinh-mac-fall-die.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 124,
+     "h": 109,
+     "ms": 80,
+     "pivotX": 71.5,
+     "footY": 104.0
+    }
+   }
+  },
+  "lang-tieu": {
+   "clips": {
+    "idle": {
+     "file": "lang-tieu-idle.webp",
+     "frames": 15,
+     "cols": 6,
+     "w": 128,
+     "h": 104,
+     "ms": 140,
+     "pivotX": 64.0,
+     "footY": 102.1
+    },
+    "run": {
+     "file": "lang-tieu-run.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 132,
+     "h": 99,
+     "ms": 75,
+     "pivotX": 68.0,
+     "footY": 95.6
+    },
+    "basic": {
+     "file": "lang-tieu-basic.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 156,
+     "h": 98,
+     "ms": 70,
+     "pivotX": 75.0,
+     "footY": 97.1
+    },
+    "hit": {
+     "file": "lang-tieu-hit.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 170,
+     "h": 104,
+     "ms": 50,
+     "pivotX": 83.5,
+     "footY": 102.6
+    },
+    "fall-die": {
+     "file": "lang-tieu-fall-die.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 150,
+     "h": 103,
+     "ms": 80,
+     "pivotX": 79.0,
+     "footY": 100.6
+    }
+   }
+  },
+  "bach-dien": {
+   "clips": {
+    "idle": {
+     "file": "bach-dien-idle.webp",
+     "frames": 15,
+     "cols": 6,
+     "w": 70,
+     "h": 109,
+     "ms": 140,
+     "pivotX": 35.0,
+     "footY": 107.8
+    },
+    "run": {
+     "file": "bach-dien-run.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 104,
+     "h": 108,
+     "ms": 75,
+     "pivotX": 58.0,
+     "footY": 107.2
+    },
+    "basic": {
+     "file": "bach-dien-basic.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 120,
+     "h": 96,
+     "ms": 70,
+     "pivotX": 59.5,
+     "footY": 94.8
+    },
+    "hit": {
+     "file": "bach-dien-hit.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 90,
+     "h": 110,
+     "ms": 50,
+     "pivotX": 45.0,
+     "footY": 108.2
+    },
+    "fall-die": {
+     "file": "bach-dien-fall-die.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 118,
+     "h": 110,
+     "ms": 80,
+     "pivotX": 59.0,
+     "footY": 107.8
+    }
+   }
+  }
+ },
+ "vfx": {
+  "hit": {
+   "file": "vfx-hit.webp",
+   "frames": 14,
+   "cols": 6,
+   "w": 114,
+   "h": 118,
+   "ms": 60,
+   "blend": "screen"
+  },
+  "skill": {
+   "file": "vfx-skill.webp",
+   "frames": 19,
+   "cols": 6,
+   "w": 110,
+   "h": 113,
+   "ms": 60,
+   "blend": "screen"
+  }
+ },
+ "bgm": {
+  "bgm-field": "bgm-field.mp3"
+ },
+ "sfx": {
+  "atk": "sfx-atk.mp3",
+  "atk2": "sfx-atk2.mp3",
+  "hit": "sfx-hit.mp3",
+  "mob-hit": "sfx-mob-hit.mp3",
+  "mob-atk": "sfx-mob-atk.mp3",
+  "mob-die": "sfx-mob-die.mp3",
+  "skill": "sfx-skill.mp3",
+  "skill-hit": "sfx-skill-hit.mp3",
+  "voice": "sfx-voice.mp3",
+  "ui": "sfx-ui.mp3",
+  "win": "sfx-win.mp3",
+  "skill-vortex": "sfx-skill-vortex.mp3",
+  "skill-vfx": "sfx-skill-vfx.mp3",
+  "passive": "sfx-passive.mp3"
+ },
+ "snd": {
+  "atk": "sfx-atk.mp3",
+  "atk2": "sfx-atk2.mp3",
+  "hit": "sfx-hit.mp3",
+  "mob-hit": "sfx-mob-hit.mp3",
+  "mob-atk": "sfx-mob-atk.mp3",
+  "mob-die": "sfx-mob-die.mp3",
+  "skill": "sfx-skill.mp3",
+  "skill-hit": "sfx-skill-hit.mp3",
+  "voice": "sfx-voice.mp3",
+  "ui": "sfx-ui.mp3",
+  "win": "sfx-win.mp3",
+  "skill-vortex": "sfx-skill-vortex.mp3",
+  "skill-vfx": "sfx-skill-vfx.mp3",
+  "passive": "sfx-passive.mp3"
+ }
+}
