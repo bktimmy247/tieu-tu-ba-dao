@@ -184,6 +184,7 @@ class Main extends Phaser.Scene {
       'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f']) this.load.image(p, 'assets/props2/' + p + '.webp');
     for (const [cid, ch] of Object.entries(M.chars)) for (const [cl, c] of Object.entries(ch.clips))
       this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h });
+    for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const [k, v] of Object.entries(M.vfx)) this.load.spritesheet('vfx:' + k, LT + v.file, { frameWidth: v.w, frameHeight: v.h });
     for (const [k, f] of Object.entries(M.bgm)) this.load.audio(k, LT + f);
     for (const [k, f] of Object.entries(M.sfx)) this.load.audio('sfx-' + k, LT + f);
@@ -279,6 +280,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regen() });
     this.time.addEvent({ delay: 200, loop: true, callback: () => this.updateHud() });
     HUD.log('Đến ' + VILLAGE.name + '. Đi theo đường đất để tới bãi quái.');
+    if (window.KTStory) { try { KTStory.install(this); } catch (e) { showErr('story: ' + e.message); } }
     window.__kt = this; this.children.list.forEach(o => { if (o.texture && o.texture.key === '__MISSING') o.setVisible(false); });
   }
 
