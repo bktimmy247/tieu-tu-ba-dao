@@ -199,8 +199,7 @@ class Main extends Phaser.Scene {
     this.load.spritesheet('tiles', 'assets/tiles/terrain-base.png', { frameWidth: 128, frameHeight: 64 });
     for (const p of ['pine', 'oak', 'sakura', 'rock', 'bush', 'lantern', 'grass', 'bamboo', 'willow', 'bamboo-hedge', 'bamboo-clump', 'bamboo-strip', 'bamboo-far', 'bridge', 'shrine', 'paddy', 'hut', 'cart',
       'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, 'assets/props3/' + p + '.webp');
-    for (const [cid, ch] of Object.entries(M.chars)) for (const [cl, c] of Object.entries(ch.clips))
-      this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h });
+    for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd/' + cid + '.webp'); for (const [cl, c] of Object.entries(ch.clips)) this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); }
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.json('propdefs', 'assets/props.json');
@@ -343,9 +342,9 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
   }
 
   makeUnit(cid, c, r, o = {}) {
-    const spr = this.add.sprite(0, 0, cid + ':idle').setScale(o.scale || 1);
+    const hd = this.textures.exists('map-hd:' + cid); const spr = hd ? this.add.image(0, 0, 'map-hd:' + cid).setScale(o.hero ? 0.36 : 0.30) : this.add.sprite(0, 0, cid + ':idle').setScale(o.scale || 1);
     if (o.tint) spr.setTint(o.tint);
-    const u = { cid, c, r, spr, clip: null, face: 1, dead: false, scale: o.scale || 1 };
+    const u = { cid, c, r, spr, clip: null, face: 1, dead: false, hdStatic: hd, scale: o.scale || 1 };
     const sh = this.add.image(0, 0, 'shadow').setScale(0.55 * u.scale, 0.5 * u.scale).setDepth(-7.5e5);
     u.shadow = sh;
     if (!o.hero) {
@@ -359,6 +358,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
 
   play(u, clip, force) {
     if (u.clip === clip && !force) return;
+    if (u.hdStatic) { u.clip = clip; return; }
     const c = this.M.chars[u.cid].clips[clip];
     u.clip = clip;
     u.spr.setTexture(u.cid + ':' + clip).setOrigin(c.pivotX / c.w, c.footY / c.h);
