@@ -281,6 +281,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
     this.time.addEvent({ delay: 200, loop: true, callback: () => this.updateHud() });
     HUD.log('Đến ' + VILLAGE.name + '. Đi theo đường đất để tới bãi quái.');
     if (window.KTStory) { try { KTStory.install(this); } catch (e) { showErr('story: ' + e.message); } }
+    if (window.KTLoot) { try { KTLoot.install(this); } catch (e) { showErr('loot: ' + e.message); } }
     window.__kt = this; this.children.list.forEach(o => { if (o.texture && o.texture.key === '__MISSING') o.setVisible(false); });
   }
 
