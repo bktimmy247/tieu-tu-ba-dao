@@ -43,6 +43,24 @@
     return col;
   }
 
+  function cellMat(map, c, r, G, cache, plaza) {
+    if (c < 0 || r < 0 || c >= map.N || r >= map.N) return 'rock';
+    const key = r * map.N + c;
+    const hit = cache.get(key);
+    if (hit) return hit;
+    const k = map.t[r][c];
+    let name = 'grass';
+    if (G.WATER.includes(k)) name = 'water';
+    else if (k === G.SAND) name = 'sand';
+    else if (G.WOOD === k) name = 'wood';
+    else if (G.ROCK2 === k) name = 'rock';
+    else if (G.PATH.includes(k)) name = 'path';
+    else if (G.DIRT === k) name = 'dirt';
+    if (plaza && name !== 'water' && Math.hypot(c - plaza.c, r - plaza.r) < plaza.rad) name = 'brick';
+    cache.set(key, name);
+    return name;
+  }
+
   /* Trả về {key, W, H, midX, midY, ms} */
   function makeGroundTexture(scene, map, G, opts) {
     opts = opts || {};
@@ -61,6 +79,29 @@
     const cache = new Map();
     const kx = TW / 2, ky = TH / 2;
     const saw = new Uint8Array(w * h);
+    const T = opts.tex || {}, plaza = opts.plaza || null;
+    const TEXM = {
+      grass: { t: T.grass, mul: [1, 1, 1] },
+      dirt: { t: T.dirt, mul: [1, 1, 1] },
+      path: { t: T.dirt, mul: [1.14, 1.1, 1.04] },
+      sand: { t: T.dirt, mul: [1, 1, 1], mix: 0.55, col: BIOME.sand },
+      rock: { t: T.stone, mul: [0.92, 0.92, 0.92] },
+      wood: { t: T.dirt, mul: [0.72, 0.6, 0.5] },
+      brick: { t: T.brick, mul: [1, 1, 1], s: 92 },
+    };
+    const samp = (name, c, r, out) => {
+      const m = TEXM[name];
+      if (!m || !m.t) { const col = BIOME[name] || BIOME.grass; out[0] = col[0]; out[1] = col[1]; out[2] = col[2]; return; }
+      const tx = m.t, s = m.s || 112;
+      let u = (c * s) % tx.w; if (u < 0) u += tx.w;
+      let v = (r * s) % tx.h; if (v < 0) v += tx.h;
+      const i = ((v | 0) * tx.w + (u | 0)) * 4, d = tx.d;
+      let R = d[i] * m.mul[0], Gc = d[i + 1] * m.mul[1], Bl = d[i + 2] * m.mul[2];
+      if (m.mix) { R = R * (1 - m.mix) + m.col[0] * m.mix; Gc = Gc * (1 - m.mix) + m.col[1] * m.mix; Bl = Bl * (1 - m.mix) + m.col[2] * m.mix; }
+      out[0] = R; out[1] = Gc; out[2] = Bl;
+    };
+    const S0 = [0, 0, 0], S1 = [0, 0, 0], S2 = [0, 0, 0], S3 = [0, 0, 0];
+    const hasTex = !!T.grass;
 
     for (let py = 0; py < h; py++) {
       const sy = minY + (py + 0.5) * H / h;
@@ -74,22 +115,39 @@
 
         const c0 = Math.floor(c), r0 = Math.floor(r);
         const fc = smooth(c - c0), fr = smooth(r - r0);
+        let R, Gc, Bl, v;
+        if (hasTex) {
+          samp(cellMat(map, c0, r0, G, cache, plaza), c, r, S0);
+          samp(cellMat(map, c0 + 1, r0, G, cache, plaza), c, r, S1);
+          samp(cellMat(map, c0, r0 + 1, G, cache, plaza), c, r, S2);
+          samp(cellMat(map, c0 + 1, r0 + 1, G, cache, plaza), c, r, S3);
+          const w0 = (1 - fc) * (1 - fr), w1 = fc * (1 - fr), w2 = (1 - fc) * fr, w3 = fc * fr;
+          R = S0[0] * w0 + S1[0] * w1 + S2[0] * w2 + S3[0] * w3;
+          Gc = S0[1] * w0 + S1[1] * w1 + S2[1] * w2 + S3[1] * w3;
+          Bl = S0[2] * w0 + S1[2] * w1 + S2[2] * w2 + S3[2] * w3;
+          v = (fbm(c * 0.13 + 11, r * 0.13 - 5) - 0.5) * 30 + (vnoise(c * 9, r * 9) - 0.5) * 8;
+          // bộ màu chung: ấm, hơi trầm (thu)
+          R = 128 + (R + v * 0.9 - 128) * 1.06 + 4;
+          Gc = 128 + (Gc + v * 0.95 - 128) * 1.06 - 1;
+          Bl = 128 + (Bl + v * 0.8 - 128) * 1.06 - 10;
+        } else {
         const A = cellColor(map, c0, r0, G, cache), B = cellColor(map, c0 + 1, r0, G, cache);
-        const C = cellColor(map, c0, r0 + 1, G, cache), E = cellColor(map, c0 + 1, r0 + 1, G, cache);
-        let R = (A[0] * (1 - fc) + B[0] * fc) * (1 - fr) + (C[0] * (1 - fc) + E[0] * fc) * fr;
-        let Gc = (A[1] * (1 - fc) + B[1] * fc) * (1 - fr) + (C[1] * (1 - fc) + E[1] * fc) * fr;
-        let Bl = (A[2] * (1 - fc) + B[2] * fc) * (1 - fr) + (C[2] * (1 - fc) + E[2] * fc) * fr;
-
-        // vân bề mặt: mảng sáng/tối lớn + hạt mịn (không lặp theo ô)
-        const macro = (fbm(c * 0.13 + 11, r * 0.13 - 5) - 0.5) * 34;
-        const grain = (vnoise(c * 13, r * 13) - 0.5) * 30;
-        const micro = (vnoise(c * 41, r * 41) - 0.5) * 16;
-        const spots = vnoise(c * 23, r * 23);
-        const tint = spots > 0.88 ? 18 : spots < 0.12 ? -16 : 0;
-        const v = macro + grain + micro + tint;
-        R = 128 + (R + v * 0.85 - 128) * 1.12;
-        Gc = 128 + (Gc + v * 1.12 - 128) * 1.12;
-        Bl = 128 + (Bl + v * 0.72 - 128) * 1.12;
+          const C = cellColor(map, c0, r0 + 1, G, cache), E = cellColor(map, c0 + 1, r0 + 1, G, cache);
+          let R = (A[0] * (1 - fc) + B[0] * fc) * (1 - fr) + (C[0] * (1 - fc) + E[0] * fc) * fr;
+          let Gc = (A[1] * (1 - fc) + B[1] * fc) * (1 - fr) + (C[1] * (1 - fc) + E[1] * fc) * fr;
+          let Bl = (A[2] * (1 - fc) + B[2] * fc) * (1 - fr) + (C[2] * (1 - fc) + E[2] * fc) * fr;
+  
+          // vân bề mặt: mảng sáng/tối lớn + hạt mịn (không lặp theo ô)
+          const macro = (fbm(c * 0.13 + 11, r * 0.13 - 5) - 0.5) * 34;
+          const grain = (vnoise(c * 13, r * 13) - 0.5) * 30;
+          const micro = (vnoise(c * 41, r * 41) - 0.5) * 16;
+          const spots = vnoise(c * 23, r * 23);
+          const tint = spots > 0.88 ? 18 : spots < 0.12 ? -16 : 0;
+          const v = macro + grain + micro + tint;
+          R = 128 + (R + v * 0.85 - 128) * 1.12;
+          Gc = 128 + (Gc + v * 1.12 - 128) * 1.12;
+          Bl = 128 + (Bl + v * 0.72 - 128) * 1.12;
+        }
 
         const i = (py * w + px) * 4;
         D[i] = R < 0 ? 0 : R > 255 ? 255 : R;

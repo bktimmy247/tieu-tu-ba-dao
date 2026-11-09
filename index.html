@@ -42,6 +42,26 @@
   #start button{font-size:18px;padding:10px 28px;border-radius:24px;border:1px solid #ffd36a;background:linear-gradient(#a8741e,#5a3a0c);color:#fff;cursor:pointer}
   @media (max-width:600px){#mini{width:120px}#mapbox{width:120px;height:80px}#mapbox canvas{width:90px;height:90px;margin:-45px 0 0 -45px}.bar{width:110px}.sk{width:46px;height:46px}#log{display:none}}
 .sk.lock{filter:grayscale(1) brightness(.55)}
+
+/* ---- điều khiển cảm ứng ---- */
+#touch{position:fixed;inset:auto 0 0 0;height:190px;pointer-events:none;z-index:12;display:none}
+#touch.on{display:block}
+#joy{position:absolute;left:18px;bottom:18px;width:132px;height:132px;border-radius:50%;
+ background:rgba(20,16,12,.42);border:2px solid rgba(240,215,160,.45);pointer-events:auto;touch-action:none}
+#joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;
+ background:radial-gradient(circle at 38% 34%,#f6e2b4,#b8894a 70%,#6b4a20);opacity:.92}
+#atk{position:absolute;right:22px;bottom:26px;width:104px;height:104px;border-radius:50%;pointer-events:auto;
+ border:3px solid #e8c87c;background:radial-gradient(circle at 40% 34%,#8f2b28,#4a1414);
+ color:#ffe9b0;font:bold 20px "Segoe UI",Arial;letter-spacing:1px;touch-action:none}
+#atk:active{transform:scale(.95)}
+#cds{position:absolute;right:140px;bottom:34px;display:flex;gap:10px;pointer-events:none}
+#cds .c{width:64px;height:64px;border-radius:14px;border:2px solid #b58a3c;background:#20160e;position:relative;overflow:hidden}
+#cds .c b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#ffe9b0;font:bold 15px "Segoe UI"}
+#cds .c s{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.68);height:0}
+#cds .c em{position:absolute;left:0;right:0;bottom:2px;text-align:center;font:11px "Segoe UI";color:#ffd9a0;font-style:normal}
+#touch.off{display:none}
+
+
 </style>
 </head>
 <body>
@@ -64,9 +84,19 @@
 <script src="vendor/phaser.min.js"></script>
 <script src="js/ground.js"></script>
 <script>window.__KT_VER=20;</script>
-<script src="js/loot.js?v=20"></script>
-<script src="js/story.js?v=20"></script>
-<script src="js/game.js?v=20"></script>
+<script src="js/loot.js?v=22"></script>
+<script src="js/story.js?v=22"></script>
+<script src="js/game.js?v=22"></script>
+
+<div id="touch" style="display:none">
+  <div id="joy"><i></i></div>
+  <div id="cds">
+    <div class="c" id="c1"><b>1</b><s></s><em>Tuyệt</em></div>
+    <div class="c" id="c2"><b>2</b><s></s><em>Hồi</em></div>
+  </div>
+  <button id="atk">ĐÁNH</button>
+</div>
+
 </body>
 </html>
 

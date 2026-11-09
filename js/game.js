@@ -196,10 +196,11 @@ class Main extends Phaser.Scene {
     const M = this.M = this.cache.json.get('man');
     this.load.spritesheet('tiles', 'assets/tiles/terrain-base.png', { frameWidth: 128, frameHeight: 64 });
     for (const p of ['pine', 'oak', 'sakura', 'rock', 'bush', 'lantern',
-      'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f']) this.load.image(p, 'assets/props2/' + p + '.webp');
+      'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, 'assets/props2/' + p + '.webp');
     for (const [cid, ch] of Object.entries(M.chars)) for (const [cl, c] of Object.entries(ch.clips))
       this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h });
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
+    for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     for (const [k, v] of Object.entries(M.vfx)) this.load.spritesheet('vfx:' + k, LT + v.file, { frameWidth: v.w, frameHeight: v.h });
     for (const [k, f] of Object.entries(M.bgm)) this.load.audio(k, LT + f);
     for (const [k, f] of Object.entries(M.sfx)) this.load.audio('sfx-' + k, LT + f);
@@ -234,10 +235,15 @@ class Main extends Phaser.Scene {
   create() {
     this.makeTextures(); this.makeAnims();
     const map = this.map = genMap(MAPCFG.seed);
+    // công trình thôn quanh quảng trường (đặt tay, không ngẫu nhiên)
+    const STRUCTS = [['gate', 10, 14], ['flag', 9, 8], ['drum', 12, 9], ['well', 8, 12]];
+    for (const [k, c, r] of STRUCTS) if (c > 0 && r > 0 && c < N && r < N) { map.obj[r][c] = k; map.block[r][c] = true; }
     // lớp 1: nền vẽ LIỀN — một texture cho cả map, không lặp ô 128×64
     map.N = N;
     const tG0 = performance.now();
-    const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 3 });
+    const texPix = k => { if (!this.textures.exists(k)) return null; const im = this.textures.get(k).getSourceImage(); const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const x = cv.getContext('2d'); x.drawImage(im, 0, 0); return { d: x.getImageData(0, 0, im.width, im.height).data, w: im.width, h: im.height }; };
+    const tex = { grass: texPix('tex-grass'), dirt: texPix('tex-dirt'), brick: texPix('tex-brick'), stone: texPix('tex-stone') };
+    const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 3, tex, plaza: { c: VILLAGE.c, r: VILLAGE.r, rad: 2.9 } });
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
     const groundMs = Math.round(performance.now() - tG0);
     // vật cản theo chân vật thể (hình tròn) + nước
@@ -248,9 +254,9 @@ class Main extends Phaser.Scene {
     this.props = [];
     // lớp 3: vật thể + bóng
     const OH = { pine: 0.97, oak: 0.95, sakura: 0.95, rock: 0.85, bush: 0.88, lantern: 0.95,
-      'house-a': 0.93, 'house-b': 0.93, 'house-c': 0.93, 'house-d': 0.93, 'house-e': 0.93, 'house-f': 0.93 };
+      'house-a': 0.93, 'house-b': 0.93, 'house-c': 0.93, 'house-d': 0.93, 'house-e': 0.93, 'house-f': 0.93, gate: 0.97, flag: 0.99, drum: 0.93, well: 0.94 };
     const SH = { pine: 0.9, oak: 1.3, sakura: 1.2, rock: 1.1, bush: 0.8, lantern: 0.5,
-      'house-a': 1.5, 'house-b': 1.5, 'house-c': 1.5, 'house-d': 1.5, 'house-e': 1.5, 'house-f': 1.5 };
+      'house-a': 1.5, 'house-b': 1.5, 'house-c': 1.5, 'house-d': 1.5, 'house-e': 1.5, 'house-f': 1.5, gate: 1.5, flag: 0.7, drum: 1.0, well: 1.0 };
     let nObj = 0;
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
       const p = map.obj[r][c]; if (!p) continue;
@@ -275,7 +281,7 @@ class Main extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(isoX(0, N - 1) - 200, -200, N * TW + 400, N * TH + 400);
     cam.startFollow(this.hero.spr, true, 0.12, 0.12);
-    cam.setZoom(Math.min(1, Math.max(0.7, innerWidth / 1100)));
+    cam.setZoom(Math.min(1.25, Math.max(0.9, innerWidth / 880)));
     cam.setBackgroundColor('#0d1408');
 
     // input
@@ -639,3 +645,62 @@ function startGame() {
 }
 $('go').onclick = startGame;
 if (location.search.includes('auto')) startGame();
+
+
+/* ---- điều khiển cảm ứng: joystick, nút ĐÁNH, vòng hồi chiêu ---- */
+(function () {
+  const inp = { dx: 0, dy: 0, active: false, last: 0 };
+  function install(s) {
+    const box = document.getElementById('touch');
+    if (!box) return;
+    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || innerWidth < 820;
+    box.style.display = isTouch ? 'block' : 'none';
+    if (!isTouch) return;
+    const joy = document.getElementById('joy'), knob = joy.querySelector('i');
+    const R = 52;
+    const setKnob = (x, y) => { knob.style.transform = 'translate(' + x + 'px,' + y + 'px)'; };
+    const read = e => { const p = e.touches ? e.touches[0] : e; const r = joy.getBoundingClientRect(); return { x: p.clientX - (r.left + r.width / 2), y: p.clientY - (r.top + r.height / 2) }; };
+    const start = e => { inp.active = true; move(e); e.preventDefault(); };
+    const move = e => {
+      if (!inp.active) return;
+      let { x, y } = read(e); const d = Math.hypot(x, y);
+      if (d > R) { x = x / d * R; y = y / d * R; }
+      setKnob(x, y);
+      inp.dx = x / R; inp.dy = y / R;
+      e.preventDefault();
+    };
+    const end = e => { inp.active = false; inp.dx = inp.dy = 0; setKnob(0, 0); if (e) e.preventDefault(); };
+    joy.addEventListener('pointerdown', start); joy.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
+    // joystick -> đặt đích cách 2,6 ô theo hướng đang giữ (dùng lại A* sẵn có)
+    setInterval(() => {
+      if (!inp.active || s.hero.dead) return;
+      const now = performance.now(); if (now - inp.last < 180) return; inp.last = now;
+      const L = Math.hypot(inp.dx, inp.dy); if (L < 0.25) return;
+      // màn hình: phải = +c, xuống = +r (đúng phép chiếu iso)
+      const dc = (inp.dx + inp.dy) * 2.6, dr = (inp.dy - inp.dx) * 2.6;
+      s.moveTo(Math.round(s.hero.c + dc), Math.round(s.hero.r + dr));
+    }, 60);
+    // nút ĐÁNH: khoá mục tiêu gần nhất trong 5 ô
+    const atk = document.getElementById('atk');
+    atk.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      let best = null, bd = 5;
+      for (const m of s.mobs) if (!m.dead) { const d = Math.hypot(m.c - s.hero.c, m.r - s.hero.r); if (d < bd) { bd = d; best = m; } }
+      if (best) { s.hero.target = best; s.hero.path = null; if (!s.hero.auto) s.toggleAuto(); }
+      else { s.sfx('ui'); HUD.log('Không có quái trong 5 ô'); }
+    });
+    // vòng hồi chiêu
+    const c1 = document.getElementById('c1'), c2 = document.getElementById('c2');
+    setInterval(() => {
+      const h = s.hero;
+      c1.querySelector('s').style.height = Math.min(100, Math.max(0, (h.cdSkill || 0) / 10 * 100)) + '%';
+      c1.querySelector('em').textContent = (h.cdSkill || 0) > 0.2 ? Math.ceil(h.cdSkill) + 's' : 'Tuyệt';
+      c2.querySelector('s').style.height = Math.min(100, Math.max(0, (h.cdPot || 0) / 15 * 100)) + '%';
+      c2.querySelector('em').textContent = (h.cdPot || 0) > 0.2 ? Math.ceil(h.cdPot) + 's' : 'Hồi';
+    }, 200);
+    box.addEventListener('pointerdown', () => { if (s.tryUnlockAudio) s.tryUnlockAudio(); });
+  }
+  const t = setInterval(() => { if (window.__kt && window.__kt.moveTo) { clearInterval(t); install(window.__kt); } }, 400);
+})();
+
