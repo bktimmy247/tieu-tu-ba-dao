@@ -288,7 +288,7 @@ class Main extends Phaser.Scene {
 
     // nhân vật
     this.sfx = k => { try { this.sound.play('sfx-' + k, { volume: k === 'voice' ? 0.6 : 0.45 }); } catch (e) { } };
-    this.hero = this.makeUnit('lang-van', VILLAGE.c, VILLAGE.r + 0.5, { hero: true, scale: 1.8 });
+    this.hero = this.makeUnit('lang-van', VILLAGE.c, VILLAGE.r + 0.5, { hero: true, scale: 1.18 });
     Object.assign(this.hero, { name: 'Lăng Vân', lv: 1, exp: 0, hp: 200, maxHp: 200, mp: 80, maxMp: 80, atk: 22, def: 4, path: null, target: null, auto: false, cdSkill: 0, cdPot: 0, nextAtk: 0 });
     this.heroRing = this.add.image(0, 0, 'ringGold').setDepth(-7e5);
     this.mobs = [];
@@ -300,7 +300,8 @@ class Main extends Phaser.Scene {
     cam.setBounds(isoX(0, N - 1) - 200, -200, N * TW + 400, N * TH + 400);
     cam.startFollow(this.hero.spr, true, 0.12, 0.12);
     // Zoom xa hơn để thấy toàn cảnh map; landscape phone ~0.78 thay vì ~0.96
-    cam.setZoom(innerWidth >= innerHeight ? Math.min(0.92, Math.max(0.72, innerHeight / 530)) : Math.min(1.05, Math.max(0.72, innerWidth / 520)));
+    // Khung ngang thấy rộng hơn; nhân vật nhỏ vừa đủ để không che map
+    cam.setZoom(innerWidth >= innerHeight ? Math.min(0.72, Math.max(0.56, innerHeight / 650)) : Math.min(0.9, Math.max(0.64, innerWidth / 620)));
     cam.setBackgroundColor('#0d1408');
 
     // input
@@ -391,7 +392,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
     const R = Math.random;
     let c, r, tries = 0;
     do { c = s.c + (R() - 0.5) * 5; r = s.r + (R() - 0.5) * 5; } while (this.map.block[Math.round(r)][Math.round(c)] && tries++ < 20);
-    const u = this.makeUnit(s.char, c, r, { scale: si === 2 ? 1.75 : 1.5, tint: s.tint });
+    const u = this.makeUnit(s.char, c, r, { scale: si === 2 ? 1.35 : 1.15, tint: s.tint });
     Object.assign(u, { spot: s, si, name: s.name, lv: s.lv, maxHp: 70 + s.lv * 45, atk: 5 + s.lv * 4, def: s.lv, home: { c, r }, state: 'idle', wait: 1 + R() * 3, nextAtk: 0 });
     u.hp = u.maxHp; u.face = R() < 0.5 ? 1 : -1;
     this.mobs.push(u);
