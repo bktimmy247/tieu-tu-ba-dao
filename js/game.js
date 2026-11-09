@@ -520,7 +520,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
       HUD.log('Máy yếu: đã tắt bóng đổ và hiệu ứng để chạy mượt hơn');
     }
     const el = document.getElementById('area');
-    if (el) el.textContent = 'Thôn Vân Sơn · ' + Math.round(this.game.loop.actualFps) + ' fps';
+    if (el) el.textContent = VILLAGE.name + ' · ' + Math.round(this.game.loop.actualFps) + ' fps';
     const el2 = document.getElementById('fps');
     if (el2) el2.textContent = Math.round(this.game.loop.actualFps) + ' fps · ' + vis + '/' + this.props.length;
   }
