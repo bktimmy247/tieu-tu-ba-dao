@@ -204,7 +204,7 @@ class Main extends Phaser.Scene {
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
-    this.load.image('village-plate', 'assets/tex/village-plate.webp');
+    for (let i = 0; i < 4; i++) this.load.image('sec' + i, 'assets/tex/sec' + i + '.webp');
     this.load.json('propdefs', 'assets/props.json');
     this.load.image('arena', 'assets/arena.jpg');
     if (this.textures.exists('vfx-boss') || true) this.load.image('vfx-boss', 'assets/lt/vfx-boss.webp');
@@ -274,7 +274,15 @@ class Main extends Phaser.Scene {
     const tex = { grass: texPix('tex-grass'), dirt: texPix('tex-dirt'), brick: texPix('tex-brick'), stone: texPix('tex-stone'), paint: texPix('tex-ground-paint') };
     const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 2, tex, plaza: { c: VILLAGE.c, r: VILLAGE.r, rad: 2.9 } });
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
-    if (this.textures.exists('village-plate')) { this.plate = this.add.image(isoX(VILLAGE.c, VILLAGE.r), isoY(VILLAGE.c, VILLAGE.r), 'village-plate').setDisplaySize(2304, 1152).setDepth(-9.9e5); }
+    // TOÀN MAP = 3x3 mảng tranh vẽ tay (2 mảng dùng lại có đảo), mép mờ chồng nhau 2%
+    if (this.textures.exists('sec0')) { const COLS = 3, ROWS = 3;
+      const W0 = (N * TW) / COLS, H0 = (N * TH) / ROWS, X0 = -N * TW / 2;
+      this.plates = [];
+      for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) {
+        const key = 'sec' + ((i + j * COLS) % 4);
+        const im = this.add.image(X0 + W0 * (i + 0.5), H0 * (j + 0.5), key).setDisplaySize(W0 * 1.02, H0 * 1.02).setDepth(-9.9e5);
+        if ((i * 7 + j * 3) % 2) im.setFlipX(true);
+        this.plates.push(im); } }
     const groundMs = Math.round(performance.now() - tG0);
     // vật cản theo chân vật thể (hình tròn) + nước
     this.obs = KTGround.buildObstacles(map, G);
