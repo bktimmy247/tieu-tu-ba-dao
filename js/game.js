@@ -286,6 +286,7 @@ class Main extends Phaser.Scene {
     this.stats = { nGround, nDeco: map.deco.length, nObj, groundMs, groundTex: gt.w + '×' + gt.h, obstacles: this.obs.list.length };
 
     // nhân vật
+    { const _t = this.add.text.bind(this.add); this.add.text = (x, y, t, st) => _t(x, y, t, Object.assign({ resolution: DPR }, st || {})); }
     this.sfx = k => { try { this.sound.play('sfx-' + k, { volume: k === 'voice' ? 0.6 : 0.45 }); } catch (e) { } };
     this.hero = this.makeUnit('lang-van', VILLAGE.c, VILLAGE.r + 0.5, { hero: true, scale: 1.18 });
     Object.assign(this.hero, { name: 'Lăng Vân', lv: 1, exp: 0, hp: 200, maxHp: 200, mp: 80, maxMp: 80, atk: 22, def: 4, path: null, target: null, auto: false, cdSkill: 0, cdPot: 0, nextAtk: 0 });
@@ -300,7 +301,7 @@ class Main extends Phaser.Scene {
     cam.startFollow(this.hero.spr, true, 0.12, 0.12);
     // Zoom xa hơn để thấy toàn cảnh map; landscape phone ~0.78 thay vì ~0.96
     // Khung ngang thấy rộng hơn; nhân vật nhỏ vừa đủ để không che map
-    cam.setZoom(innerWidth >= innerHeight ? Math.min(0.72, Math.max(0.56, innerHeight / 650)) : Math.min(0.9, Math.max(0.64, innerWidth / 620)));
+    cam.setZoom(camZoomFor(innerWidth, innerHeight));
     cam.setBackgroundColor('#0d1408');
 
     // input
@@ -569,7 +570,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
         for (const m of this.mobs) if (!m.dead) { const d = Math.hypot(m.c - h.c, m.r - h.r); if (d < bd) { bd = d; best = m; } }
         h.target = best;
       }
-      const busy = h.clip === 'basic' && h.spr.anims.isPlaying || h.clip === 'hit' && h.spr.anims.isPlaying;
+      const busy = h.clip === 'basic' && (h.spr.anims && h.spr.anims.isPlaying) || h.clip === 'hit' && (h.spr.anims && h.spr.anims.isPlaying);
       if (h.target && !h.target.dead) {
         const d = Math.hypot(h.target.c - h.c, h.target.r - h.r);
         if (d > 1.25) {
@@ -592,7 +593,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
         h.target = null; h.path = null;
         if (!busy) this.play(h, 'idle');
       }
-      if (h.clip !== 'idle' && h.clip !== 'run' && !h.spr.anims.isPlaying && !h.dead) this.play(h, 'idle');
+      if (h.clip !== 'idle' && h.clip !== 'run' && !(h.spr.anims && h.spr.anims.isPlaying) && !h.dead) this.play(h, 'idle');
     }
     this.place(h);
     this.heroRing.setPosition(h.spr.x, h.spr.y);
@@ -603,7 +604,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
     for (const m of this.mobs) {
       if (m.dead) { this.place(m); continue; }
       const dh = Math.hypot(h.c - m.c, h.r - m.r), dHome = Math.hypot(m.c - m.home.c, m.r - m.home.r);
-      const busy = (m.clip === 'basic' || m.clip === 'hit') && m.spr.anims.isPlaying;
+      const busy = (m.clip === 'basic' || m.clip === 'hit') && (m.spr.anims && m.spr.anims.isPlaying);
       if (m.state !== 'chase' && m.spot.aggro && !h.dead && dh < 3.5) { m.state = 'chase'; }
       if (m.state === 'chase') {
         if (h.dead || dHome > 9) { m.state = 'return'; }
@@ -626,7 +627,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
         this.play(m, 'run');
         if (this.stepToward(m, m.goal.c, m.goal.r, 1.2, dt)) { m.state = 'idle'; m.wait = 2 + Math.random() * 4; }
       }
-      if (m.clip !== 'idle' && m.clip !== 'run' && !m.spr.anims.isPlaying) this.play(m, 'idle');
+      if (m.clip !== 'idle' && m.clip !== 'run' && !(m.spr.anims && m.spr.anims.isPlaying)) this.play(m, 'idle');
       this.place(m);
     }
   }
@@ -654,11 +655,14 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
   }
 }
 
+const DPR = Math.max(1, Math.min(window.devicePixelRatio || 1, 2)); window.__DPR = DPR;
+function camZoomFor(w, h) { return (w >= h ? Math.min(0.72, Math.max(0.56, h / 650)) : Math.min(0.9, Math.max(0.64, w / 620))) * DPR; }
+addEventListener('resize', () => { const s = window.__kt; if (!s || !s.game) return; s.game.scale.resize(Math.round(innerWidth * DPR), Math.round(innerHeight * DPR)); s.game.scale.setZoom(1 / DPR); s.cameras.main.setZoom(camZoomFor(innerWidth, innerHeight)); });
 function startGame() {
   $('start').remove();
   new Phaser.Game({
     type: Phaser.AUTO, parent: 'game', backgroundColor: '#0d1408',
-    scale: { mode: Phaser.Scale.RESIZE, width: innerWidth, height: innerHeight },
+    scale: { mode: Phaser.Scale.NONE, width: Math.round(innerWidth * DPR), height: Math.round(innerHeight * DPR), zoom: 1 / DPR },
     render: { antialias: true, powerPreference: 'high-performance' },
     audio: { disableWebAudio: /iPhone|iPad|iPod/i.test(navigator.userAgent) },
     scene: [Boot, Main],
