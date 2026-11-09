@@ -346,7 +346,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
   makeUnit(cid, c, r, o = {}) {
     const idleC = this.M.chars[cid].clips.idle; const targetH = o.hero ? 120 : 92; const scl = targetH / (idleC.h * 2); const spr = this.add.sprite(0, 0, cid + ':idle').setScale(scl);
     if (o.tint) spr.setTint(o.tint);
-    const u = { cid, c, r, spr, clip: null, face: 1, dead: false, hdStatic: false, scale: scl };
+    const u = { cid, c, r, spr, clip: null, face: 1, dead: false, hdStatic: false, scale: scl, targetH };
     const sh = this.add.image(0, 0, 'shadow').setScale(0.55 * u.scale, 0.5 * u.scale).setDepth(-7.5e5);
     u.shadow = sh;
     if (!o.hero) {
@@ -364,6 +364,8 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
     const c = this.M.chars[u.cid].clips[clip];
     u.clip = clip;
     u.spr.setTexture(u.cid + ':' + clip).setOrigin(c.pivotX / c.w, c.footY / c.h);
+    // giữ chiều cao nhân vật không đổi giữa các động tác (mỗi clip bị cắt khung khác nhau)
+    u.spr.setScale((u.targetH || 120) / (c.h * 2));
     { const ak = u.cid + ':' + clip, a = this.anims.get(ak); if (a && a.frames.length) u.spr.play(ak); }
   }
 
