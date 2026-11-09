@@ -142,5 +142,29 @@
   "anchor": 0.93,
   "shadow": 0.9,
   "rad": 0.3
+ },
+ "bamboo-hedge": {
+  "file": "assets/props3/bamboo-hedge.webp",
+  "anchor": 0.98,
+  "shadow": 0.9,
+  "rad": 0.42
+ },
+ "bamboo-clump": {
+  "file": "assets/props3/bamboo-clump.webp",
+  "anchor": 0.98,
+  "shadow": 0.9,
+  "rad": 0.42
+ },
+ "bamboo-strip": {
+  "file": "assets/props3/bamboo-strip.webp",
+  "anchor": 0.98,
+  "shadow": 0.9,
+  "rad": 0.42
+ },
+ "bamboo-far": {
+  "file": "assets/props3/bamboo-far.webp",
+  "anchor": 0.98,
+  "shadow": 0.9,
+  "rad": 0.2
  }
 }
