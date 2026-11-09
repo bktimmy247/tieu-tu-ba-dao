@@ -204,6 +204,7 @@ class Main extends Phaser.Scene {
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
+    this.load.image('village-plate', 'assets/tex/village-plate.webp');
     this.load.json('propdefs', 'assets/props.json');
     this.load.image('arena', 'assets/arena.jpg');
     if (this.textures.exists('vfx-boss') || true) this.load.image('vfx-boss', 'assets/lt/vfx-boss.webp');
@@ -259,6 +260,10 @@ class Main extends Phaser.Scene {
     // công trình thôn quanh quảng trường (đặt tay, không ngẫu nhiên)
     const STRUCTS = [['gate', 10, 14], ['flag', 9, 8], ['drum', 12, 9], ['well', 8, 12], ['shrine', 7, 7], ['cart', 13, 12], ['hut', 6, 13], ['bridge', 11, 6]];
     for (const [k, c, r] of STRUCTS) if (c > 0 && r > 0 && c < N && r < N) { map.obj[r][c] = k; map.block[r][c] = true; }
+    // tranh làng đã có nhà/cây sẵn: xoá vật thể trùng trong bán kính 8 ô (giữ vài món điểm nhấn)
+    { const KEEP = /^(well|drum|gate|flag|lantern|shrine)$/;
+      for (let r2 = 0; r2 < N; r2++) for (let c2 = 0; c2 < N; c2++) { const q = map.obj[r2][c2]; if (!q || KEEP.test(q)) continue;
+        if (Math.hypot(c2 - VILLAGE.c, r2 - VILLAGE.r) < 8) { map.obj[r2][c2] = null; map.block[r2][c2] = false; } } }
     // VIỀN CẢNH: vành đá chạy quanh biên để mép map không bị cắt cụt
     for (let i = 1; i < N - 1; i++) for (const [r, c] of [[1, i], [N - 2, i], [i, 1], [i, N - 2]]) {
       if (!map.obj[r][c] && (i % 3 !== 0)) { map.obj[r][c] = 'rock'; map.block[r][c] = true; } }
@@ -269,6 +274,7 @@ class Main extends Phaser.Scene {
     const tex = { grass: texPix('tex-grass'), dirt: texPix('tex-dirt'), brick: texPix('tex-brick'), stone: texPix('tex-stone'), paint: texPix('tex-ground-paint') };
     const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 2, tex, plaza: { c: VILLAGE.c, r: VILLAGE.r, rad: 2.9 } });
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
+    if (this.textures.exists('village-plate')) { this.plate = this.add.image(isoX(VILLAGE.c, VILLAGE.r), isoY(VILLAGE.c, VILLAGE.r), 'village-plate').setDisplaySize(2304, 1152).setDepth(-9.9e5); }
     const groundMs = Math.round(performance.now() - tG0);
     // vật cản theo chân vật thể (hình tròn) + nước
     this.obs = KTGround.buildObstacles(map, G);
