@@ -62,9 +62,33 @@
 #touch.off{display:none}
 
 
+
+/* ---- khung NGANG ---- */
+#rot{position:fixed;inset:0;z-index:60;display:none;background:#0b0e13;
+ align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#f0d79a;
+ font:16px "Segoe UI",Arial;text-align:center;padding:24px}
+#rot .ic{font-size:46px;animation:rv 1.6s ease-in-out infinite}
+@keyframes rv{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+@media (orientation:portrait) and (pointer:coarse){#rot{display:flex}}
+@media (orientation:landscape){
+  #mini{width:150px;top:6px;right:6px}
+  #mapbox{width:150px;height:86px}
+  #quest{max-width:250px;font-size:11.5px}
+  #me{transform:scale(.92);transform-origin:top left}
+  #skills{bottom:8px}
+  .sk{width:46px;height:46px}
+  #joy{width:112px;height:112px;left:12px;bottom:12px}
+  #joy i{width:48px;height:48px;margin:-24px 0 0 -24px}
+  #atk{width:88px;height:88px;font-size:17px;right:16px;bottom:14px}
+  #cds{right:112px;bottom:20px}
+  #cds .c{width:54px;height:54px}
+  #touch{height:150px}
+}
+
 </style>
 </head>
 <body>
+<div id="rot"><div class="ic">📱</div><div><b>Xoay ngang máy</b><br><span style="opacity:.75;font-size:13px">Game thiết kế cho màn hình ngang</span></div></div>
 <div id="game"></div>
 <div id="me" class="panel"><div class="ava"></div><div><div class="nm">Lăng Vân</div><div class="lv" id="lv">Cấp 1</div>
   <div class="bar" id="hp"><i></i><span></span></div><div class="bar" id="mp"><i></i><span></span></div></div></div>
@@ -84,9 +108,9 @@
 <script src="vendor/phaser.min.js"></script>
 <script src="js/ground.js"></script>
 <script>window.__KT_VER=20;</script>
-<script src="js/loot.js?v=22"></script>
-<script src="js/story.js?v=22"></script>
-<script src="js/game.js?v=22"></script>
+<script src="js/loot.js?v=23"></script>
+<script src="js/story.js?v=23"></script>
+<script src="js/game.js?v=23"></script>
 
 <div id="touch" style="display:none">
   <div id="joy"><i></i></div>

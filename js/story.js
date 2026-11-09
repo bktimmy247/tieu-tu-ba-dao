@@ -172,6 +172,7 @@
         if (b.dead) return;
         sc.play(b, 'ultimate' in sc.M.chars[b.cid].clips ? 'ultimate' : 'basic', true);
         sc.vfx('skill', h); sc.sfx('skill-hit');
+      if (sc.textures.exists('vfx-boss')) { const fx = sc.add.image(isoX(tc, tr), isoY(tc, tr) - 26, 'vfx-boss').setDepth(2e6).setScale(1.5).setAlpha(0.95); sc.tweens.add({ targets: fx, alpha: 0, scale: 2.3, duration: 540, onComplete: () => fx.destroy() }); }
         if (!h.dead && Math.hypot(h.c - tc, h.r - tr) < 1.4) sc.damage(h, Math.round(70 + b.lv * 6));
         sc.cameras.main.shake(180, 0.006);
       });

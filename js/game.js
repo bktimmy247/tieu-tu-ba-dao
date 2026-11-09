@@ -201,6 +201,7 @@ class Main extends Phaser.Scene {
       this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h });
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
+    if (this.textures.exists('vfx-boss') || true) this.load.image('vfx-boss', 'assets/lt/vfx-boss.webp');
     for (const [k, v] of Object.entries(M.vfx)) this.load.spritesheet('vfx:' + k, LT + v.file, { frameWidth: v.w, frameHeight: v.h });
     for (const [k, f] of Object.entries(M.bgm)) this.load.audio(k, LT + f);
     for (const [k, f] of Object.entries(M.sfx)) this.load.audio('sfx-' + k, LT + f);
@@ -270,7 +271,7 @@ class Main extends Phaser.Scene {
 
     // nhân vật
     this.sfx = k => { try { this.sound.play('sfx-' + k, { volume: k === 'voice' ? 0.6 : 0.45 }); } catch (e) { } };
-    this.hero = this.makeUnit('lang-van', VILLAGE.c, VILLAGE.r + 0.5, { hero: true, scale: 1.55 });
+    this.hero = this.makeUnit('lang-van', VILLAGE.c, VILLAGE.r + 0.5, { hero: true, scale: 1.8 });
     Object.assign(this.hero, { name: 'Lăng Vân', lv: 1, exp: 0, hp: 200, maxHp: 200, mp: 80, maxMp: 80, atk: 22, def: 4, path: null, target: null, auto: false, cdSkill: 0, cdPot: 0, nextAtk: 0 });
     this.heroRing = this.add.image(0, 0, 'ringGold').setDepth(-7e5);
     this.mobs = [];
@@ -281,7 +282,7 @@ class Main extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(isoX(0, N - 1) - 200, -200, N * TW + 400, N * TH + 400);
     cam.startFollow(this.hero.spr, true, 0.12, 0.12);
-    cam.setZoom(Math.min(1.25, Math.max(0.9, innerWidth / 880)));
+    cam.setZoom(innerWidth >= innerHeight ? Math.min(1.15, Math.max(0.95, innerHeight / 430)) : Math.min(1.2, Math.max(0.82, innerWidth / 470)));
     cam.setBackgroundColor('#0d1408');
 
     // input
@@ -372,7 +373,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
     const R = Math.random;
     let c, r, tries = 0;
     do { c = s.c + (R() - 0.5) * 5; r = s.r + (R() - 0.5) * 5; } while (this.map.block[Math.round(r)][Math.round(c)] && tries++ < 20);
-    const u = this.makeUnit(s.char, c, r, { scale: si === 2 ? 1.5 : 1.3, tint: s.tint });
+    const u = this.makeUnit(s.char, c, r, { scale: si === 2 ? 1.75 : 1.5, tint: s.tint });
     Object.assign(u, { spot: s, si, name: s.name, lv: s.lv, maxHp: 70 + s.lv * 45, atk: 5 + s.lv * 4, def: s.lv, home: { c, r }, state: 'idle', wait: 1 + R() * 3, nextAtk: 0 });
     u.hp = u.maxHp; u.face = R() < 0.5 ? 1 : -1;
     this.mobs.push(u);
@@ -426,7 +427,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
   vfx(k, u) {
     if (this.lowQ) return;
     const v = this.M.vfx[k];
-    const s = this.add.sprite(u.spr.x, u.spr.y - 40 * u.scale, 'vfx:' + k).setDepth(u.spr.depth + 2).setScale(k === 'skill' ? 1.3 : 1);
+    const s = this.add.sprite(u.spr.x, u.spr.y - 46 * u.scale, 'vfx:' + k).setDepth(u.spr.depth + 2).setScale(k === 'skill' ? 2.3 : 1.7);
     if (v.blend === 'screen') s.setBlendMode(Phaser.BlendModes.SCREEN);
     { const a = this.anims.get('vfx:' + k); if (a && a.frames.length) { s.play('vfx:' + k); s.on('animationcomplete', () => s.destroy()); } else { s.destroy(); return; } }
   }
