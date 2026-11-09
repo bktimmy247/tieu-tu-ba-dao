@@ -127,6 +127,7 @@
           Bl = S0[2] * w0 + S1[2] * w1 + S2[2] * w2 + S3[2] * w3;
           v = (fbm(c * 0.13 + 11, r * 0.13 - 5) - 0.5) * 30 + (vnoise(c * 9, r * 9) - 0.5) * 8;
           // bộ màu chung: ấm, hơi trầm (thu)
+          if (T.paint) { const tx = T.paint, sc = 6; let u = (c * sc) % tx.w; if (u < 0) u += tx.w; let vv = (r * sc) % tx.h; if (vv < 0) vv += tx.h; const pi = ((vv | 0) * tx.w + (u | 0)) * 4, pd = tx.d; R = R * 0.58 + pd[pi] * 0.42; Gc = (Gc) * 0.58 + pd[pi + 1] * 0.42; Bl = Bl * 0.58 + pd[pi + 2] * 0.42; }
           R = 128 + (R + v * 0.9 - 128) * 1.06 + 4;
           Gc = 128 + (Gc + v * 0.95 - 128) * 1.06 - 1;
           Bl = 128 + (Bl + v * 0.8 - 128) * 1.06 - 10;

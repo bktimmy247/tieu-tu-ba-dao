@@ -203,6 +203,7 @@ class Main extends Phaser.Scene {
     for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png'); for (const [cl, c] of Object.entries(ch.clips)) { this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); this.load.spritesheet('hdx:' + cid + ':' + cl, HDLT + c.file, { frameWidth: c.w * 2, frameHeight: c.h * 2 }); } }
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
+    this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
     this.load.json('propdefs', 'assets/props.json');
     this.load.image('arena', 'assets/arena.jpg');
     if (this.textures.exists('vfx-boss') || true) this.load.image('vfx-boss', 'assets/lt/vfx-boss.webp');
@@ -248,14 +249,24 @@ class Main extends Phaser.Scene {
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { const p = map.obj[r][c]; if (!p) continue;
         let ok = true; for (const k of keep) if (Math.hypot(k[0] - c, k[1] - r) < MINPROP) { ok = false; break; }
         if (ok) keep.push([c, r]); else { map.obj[r][c] = null; map.block[r][c] = false; } } }
+    { // CỤM: 60% vật thể giữ trong 12 cụm, ngoài cụm chỉ giữ 40% -> mọc thành đám như map thật
+      const R2 = rng(MAPCFG.seed + 77), CL = [];
+      for (let i = 0; i < 12; i++) CL.push([6 + R2() * (N - 12), 6 + R2() * (N - 12)]);
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+        const p = map.obj[r][c]; if (!p || /^(gate|flag|drum|well|shrine|cart|hut|bridge|house-)/.test(p)) continue;
+        const inC = CL.some(q => Math.hypot(q[0] - c, q[1] - r) < 4.5);
+        if (!inC && R2() > 0.4) { map.obj[r][c] = null; map.block[r][c] = false; } } }
     // công trình thôn quanh quảng trường (đặt tay, không ngẫu nhiên)
     const STRUCTS = [['gate', 10, 14], ['flag', 9, 8], ['drum', 12, 9], ['well', 8, 12], ['shrine', 7, 7], ['cart', 13, 12], ['hut', 6, 13], ['bridge', 11, 6]];
     for (const [k, c, r] of STRUCTS) if (c > 0 && r > 0 && c < N && r < N) { map.obj[r][c] = k; map.block[r][c] = true; }
+    // VIỀN CẢNH: vành đá chạy quanh biên để mép map không bị cắt cụt
+    for (let i = 1; i < N - 1; i++) for (const [r, c] of [[1, i], [N - 2, i], [i, 1], [i, N - 2]]) {
+      if (!map.obj[r][c] && (i % 3 !== 0)) { map.obj[r][c] = 'rock'; map.block[r][c] = true; } }
     // lớp 1: nền vẽ LIỀN — một texture cho cả map, không lặp ô 128×64
     map.N = N;
     const tG0 = performance.now();
     const texPix = k => { if (!this.textures.exists(k)) return null; const im = this.textures.get(k).getSourceImage(); const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const x = cv.getContext('2d'); x.drawImage(im, 0, 0); return { d: x.getImageData(0, 0, im.width, im.height).data, w: im.width, h: im.height }; };
-    const tex = { grass: texPix('tex-grass'), dirt: texPix('tex-dirt'), brick: texPix('tex-brick'), stone: texPix('tex-stone') };
+    const tex = { grass: texPix('tex-grass'), dirt: texPix('tex-dirt'), brick: texPix('tex-brick'), stone: texPix('tex-stone'), paint: texPix('tex-ground-paint') };
     const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 2, tex, plaza: { c: VILLAGE.c, r: VILLAGE.r, rad: 2.9 } });
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
     const groundMs = Math.round(performance.now() - tG0);
@@ -304,6 +315,15 @@ class Main extends Phaser.Scene {
     // Khung ngang thấy rộng hơn; nhân vật nhỏ vừa đủ để không che map
     cam.setZoom(camZoomFor(innerWidth, innerHeight));
     cam.setBackgroundColor('#0d1408');
+    // LỚP KHÔNG KHÍ: vignette tối bốn mép + sương mờ phía xa
+    { const g = this.make.graphics({ x: 0, y: 0, add: false });
+      const R0 = Math.max(innerWidth, innerHeight);
+      for (let i = 0; i < 26; i++) { const t = i / 26; g.fillStyle(0x0a1208, t * 0.055); g.fillCircle(R0 * 0.62, R0 * 0.62, R0 * (0.74 - t * 0.46)); }
+      g.generateTexture('vig', Math.round(R0 * 1.3), Math.round(R0 * 1.3)); g.destroy();
+      const vig = this.add.image(innerWidth / 2, innerHeight / 2, 'vig').setScrollFactor(0).setDepth(9e5).setAlpha(0.55);
+      const fog = this.add.rectangle(innerWidth / 2, innerHeight * 0.12, innerWidth * 1.2, innerHeight * 0.5, 0xcfd8c0, 0.10).setScrollFactor(0).setDepth(9e4);
+      this.scale.on('resize', sz => { vig.setPosition(sz.width / 2, sz.height / 2).setDisplaySize(sz.width * 1.15, sz.height * 1.15); fog.setPosition(sz.width / 2, sz.height * 0.12).setSize(sz.width * 1.2, sz.height * 0.5); });
+      this.atmo = { vig, fog }; }
 
     // input
     this.input.on('pointerdown', p => this.onClick(p.worldX, p.worldY));
