@@ -18,6 +18,7 @@ function showErr(msg) {
 window.addEventListener('error', e => showErr('LỖI: ' + e.message + '  @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
 window.addEventListener('unhandledrejection', e => { const msg = String(e.reason && (e.reason.message || e.reason)); if (/audio|play\(\)|NotAllowed|interrupted/i.test(msg)) { e.preventDefault(); console.warn('audio:', msg); return; } showErr('PROMISE: ' + msg); });
 const LT = 'assets/lt/';
+const HDLT = 'assets/lt-hd/';
 const G = { GRASS: [0, 1, 2], DIRT: 3, PATH: [4, 5], SAND: 6, ROCK: 7, WATER: [8, 9], ROCK2: 10, WOOD: 11 };
 const isoX = (c, r) => (c - r) * TW / 2, isoY = (c, r) => (c + r) * TH / 2;
 const toTile = (x, y) => { const a = x / (TW / 2), b = y / (TH / 2); return { c: (a + b) / 2, r: (b - a) / 2 }; };
@@ -199,7 +200,7 @@ class Main extends Phaser.Scene {
     this.load.spritesheet('tiles', 'assets/tiles/terrain-base.png', { frameWidth: 128, frameHeight: 64 });
     for (const p of ['pine', 'oak', 'sakura', 'rock', 'bush', 'lantern', 'grass', 'bamboo', 'willow', 'bamboo-hedge', 'bamboo-clump', 'bamboo-strip', 'bamboo-far', 'bridge', 'shrine', 'paddy', 'hut', 'cart',
       'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, 'assets/props3/' + p + '.webp');
-    for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png'); for (const [cl, c] of Object.entries(ch.clips)) this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); }
+    for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png'); for (const [cl, c] of Object.entries(ch.clips)) { this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); this.load.spritesheet('hdx:' + cid + ':' + cl, HDLT + c.file, { frameWidth: c.w * 2, frameHeight: c.h * 2 }); } }
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.json('propdefs', 'assets/props.json');
@@ -231,7 +232,7 @@ class Main extends Phaser.Scene {
 
   makeAnims() {
     for (const [cid, ch] of Object.entries(this.M.chars)) for (const [cl, c] of Object.entries(ch.clips))
-      if (this.textures.exists(cid + ':' + cl) && this.textures.get(cid + ':' + cl).frameTotal > 1) this.anims.create({ key: cid + ':' + cl, frames: this.anims.generateFrameNumbers(cid + ':' + cl, { start: 0, end: c.frames - 1 }), frameRate: 1000 / c.ms, repeat: (cl === 'idle' || cl === 'run') ? -1 : 0 });
+      { const hk = 'hdx:' + cid + ':' + cl; const src = (this.textures.exists(hk) && this.textures.get(hk).frameTotal > 1) ? hk : ((this.textures.exists(cid + ':' + cl) && this.textures.get(cid + ':' + cl).frameTotal > 1) ? cid + ':' + cl : null); if (src) this.anims.create({ key: cid + ':' + cl, frames: this.anims.generateFrameNumbers(src, { start: 0, end: c.frames - 1 }), frameRate: 1000 / c.ms, repeat: (cl === 'idle' || cl === 'run') ? -1 : 0 }); }
     for (const [k, v] of Object.entries(this.M.vfx))
       if (this.textures.exists('vfx:' + k) && this.textures.get('vfx:' + k).frameTotal > 1) this.anims.create({ key: 'vfx:' + k, frames: this.anims.generateFrameNumbers('vfx:' + k, { start: 0, end: v.frames - 1 }), frameRate: 1000 / v.ms, repeat: 0 });
   }
@@ -343,9 +344,9 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
   }
 
   makeUnit(cid, c, r, o = {}) {
-    const hd = this.textures.exists('map-hd:' + cid); const spr = hd ? this.add.image(0, 0, 'map-hd:' + cid).setScale(o.hero ? 0.36 : 0.30) : this.add.sprite(0, 0, cid + ':idle').setScale(o.scale || 1);
+    const idleC = this.M.chars[cid].clips.idle; const targetH = o.hero ? 120 : 92; const scl = targetH / (idleC.h * 2); const spr = this.add.sprite(0, 0, cid + ':idle').setScale(scl);
     if (o.tint) spr.setTint(o.tint);
-    const u = { cid, c, r, spr, clip: null, face: 1, dead: false, hdStatic: hd, scale: o.scale || 1 };
+    const u = { cid, c, r, spr, clip: null, face: 1, dead: false, hdStatic: false, scale: scl };
     const sh = this.add.image(0, 0, 'shadow').setScale(0.55 * u.scale, 0.5 * u.scale).setDepth(-7.5e5);
     u.shadow = sh;
     if (!o.hero) {
