@@ -109,9 +109,11 @@ function genMap(seed) {
     let p = null, x = R();
     if (e <= 3 && x < 0.60) p = R() < 0.6 ? 'pine' : 'oak';
     else if (forest > 0.6 && x < 0.24) p = R() < 0.5 ? 'pine' : (R() < 0.75 ? 'oak' : 'sakura');
-    else if (waterSide && x < 0.12) p = 'rock';
+    else if (waterSide && x < 0.30) p = R() < 0.5 ? 'willow' : 'bamboo';
+    else if (waterSide && x < 0.34) p = 'rock';
     else if (x < 0.025) p = 'rock';
-    else if (x < 0.06) p = 'bush';
+    else if (x < 0.09) p = 'bush';
+    else if (x < 0.13) p = R() < 0.6 ? 'paddy' : 'grass';
     else if (x < 0.075) p = R() < 0.5 ? 'oak' : 'sakura';
     if (p) { obj[r][c] = p; if (p !== 'bush') block[r][c] = true; }
   }
@@ -195,8 +197,8 @@ class Main extends Phaser.Scene {
   preload() {
     const M = this.M = this.cache.json.get('man');
     this.load.spritesheet('tiles', 'assets/tiles/terrain-base.png', { frameWidth: 128, frameHeight: 64 });
-    for (const p of ['pine', 'oak', 'sakura', 'rock', 'bush', 'lantern',
-      'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, 'assets/props2/' + p + '.webp');
+    for (const p of ['pine', 'oak', 'sakura', 'rock', 'bush', 'lantern', 'grass', 'bamboo', 'willow', 'bridge', 'shrine', 'paddy', 'hut', 'cart',
+      'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, 'assets/props3/' + p + '.webp');
     for (const [cid, ch] of Object.entries(M.chars)) for (const [cl, c] of Object.entries(ch.clips))
       this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h });
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
@@ -247,7 +249,7 @@ class Main extends Phaser.Scene {
         let ok = true; for (const k of keep) if (Math.hypot(k[0] - c, k[1] - r) < MINPROP) { ok = false; break; }
         if (ok) keep.push([c, r]); else { map.obj[r][c] = null; map.block[r][c] = false; } } }
     // công trình thôn quanh quảng trường (đặt tay, không ngẫu nhiên)
-    const STRUCTS = [['gate', 10, 14], ['flag', 9, 8], ['drum', 12, 9], ['well', 8, 12]];
+    const STRUCTS = [['gate', 10, 14], ['flag', 9, 8], ['drum', 12, 9], ['well', 8, 12], ['shrine', 7, 7], ['cart', 13, 12], ['hut', 6, 13], ['bridge', 11, 6]];
     for (const [k, c, r] of STRUCTS) if (c > 0 && r > 0 && c < N && r < N) { map.obj[r][c] = k; map.block[r][c] = true; }
     // lớp 1: nền vẽ LIỀN — một texture cho cả map, không lặp ô 128×64
     map.N = N;
@@ -266,9 +268,9 @@ class Main extends Phaser.Scene {
     this.props = [];
     // lớp 3: vật thể + bóng
     const OH = { pine: 0.97, oak: 0.95, sakura: 0.95, rock: 0.85, bush: 0.88, lantern: 0.95,
-      'house-a': 0.93, 'house-b': 0.93, 'house-c': 0.93, 'house-d': 0.93, 'house-e': 0.93, 'house-f': 0.93, gate: 0.97, flag: 0.99, drum: 0.93, well: 0.94 };
+      'house-a': 0.93, 'house-b': 0.93, 'house-c': 0.93, 'house-d': 0.93, 'house-e': 0.93, 'house-f': 0.93, gate: 0.97, flag: 0.99, drum: 0.93, well: 0.94, grass: 0.94, bamboo: 0.98, willow: 0.98, bridge: 0.96, shrine: 0.96, paddy: 0.94, hut: 0.95, cart: 0.93 };
     const SH = { pine: 0.9, oak: 1.3, sakura: 1.2, rock: 1.1, bush: 0.8, lantern: 0.5,
-      'house-a': 1.5, 'house-b': 1.5, 'house-c': 1.5, 'house-d': 1.5, 'house-e': 1.5, 'house-f': 1.5, gate: 1.5, flag: 0.7, drum: 1.0, well: 1.0 };
+      'house-a': 1.5, 'house-b': 1.5, 'house-c': 1.5, 'house-d': 1.5, 'house-e': 1.5, 'house-f': 1.5, gate: 1.5, flag: 0.7, drum: 1.0, well: 1.0, grass: 0.5, bamboo: 0.9, willow: 1.2, bridge: 0.6, shrine: 0.9, paddy: 0.7, hut: 1.4, cart: 0.9 };
     if (window.KT_PROPS) { for (const k in window.KT_PROPS) { const d = window.KT_PROPS[k];
       if (d.anchor != null) OH[k] = d.anchor;
       if (d.shadow != null) SH[k] = d.shadow;
