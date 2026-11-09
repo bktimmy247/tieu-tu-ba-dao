@@ -199,7 +199,7 @@ class Main extends Phaser.Scene {
     this.load.spritesheet('tiles', 'assets/tiles/terrain-base.png', { frameWidth: 128, frameHeight: 64 });
     for (const p of ['pine', 'oak', 'sakura', 'rock', 'bush', 'lantern', 'grass', 'bamboo', 'willow', 'bamboo-hedge', 'bamboo-clump', 'bamboo-strip', 'bamboo-far', 'bridge', 'shrine', 'paddy', 'hut', 'cart',
       'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, 'assets/props3/' + p + '.webp');
-    for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd/' + cid + '.webp'); for (const [cl, c] of Object.entries(ch.clips)) this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); }
+    for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png'); for (const [cl, c] of Object.entries(ch.clips)) this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); }
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.json('propdefs', 'assets/props.json');
@@ -255,7 +255,7 @@ class Main extends Phaser.Scene {
     const tG0 = performance.now();
     const texPix = k => { if (!this.textures.exists(k)) return null; const im = this.textures.get(k).getSourceImage(); const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const x = cv.getContext('2d'); x.drawImage(im, 0, 0); return { d: x.getImageData(0, 0, im.width, im.height).data, w: im.width, h: im.height }; };
     const tex = { grass: texPix('tex-grass'), dirt: texPix('tex-dirt'), brick: texPix('tex-brick'), stone: texPix('tex-stone') };
-    const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 3, tex, plaza: { c: VILLAGE.c, r: VILLAGE.r, rad: 2.9 } });
+    const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 2, tex, plaza: { c: VILLAGE.c, r: VILLAGE.r, rad: 2.9 } });
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
     const groundMs = Math.round(performance.now() - tG0);
     // vật cản theo chân vật thể (hình tròn) + nước
