@@ -151,6 +151,11 @@
       const u = sc.makeUnit(ch, sp.c, sp.r, { scale: 2.2, tint });
       Object.assign(u, { spot, si, name: nm, lv, maxHp: hp, hp, atk, def: lv, home: { c: sp.c, r: sp.r }, state: 'idle', wait: 1, nextAtk: 0, isBoss: true, nextSlam: 0 });
       sc.mobs.push(u); st.boss = u;
+  // sân đấu: 1 texture nền liền (học từ TIÊU TỬ BÁ ĐẠO: nền vẽ liền cho vùng đặc biệt)
+  if (sc.textures.exists('arena')) {
+    if (st.arena) st.arena.destroy();
+    st.arena = sc.add.image(isoX(sp.c, sp.r), isoY(sp.c, sp.r), 'arena').setDepth(-9.5e5).setScale(1.35).setAlpha(0.92);
+  }
       HUD.log(nm.replace(' ☠', '') + ' xuất hiện!');
     }
     let ring = null;
