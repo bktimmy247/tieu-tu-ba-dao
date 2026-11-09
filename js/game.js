@@ -91,7 +91,7 @@ function genMap(seed) {
   // viền: đá + rừng dày
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     const e = Math.min(c, r, N - 1 - c, N - 1 - r);
-    if (e === 0) { t[r][c] = G.ROCK2; block[r][c] = true; }
+    if (e === 0) { t[r][c] = G.ROCK2; }   // chỉ là hình, đi lại đã bị chặn ở biên bởi solid()
     if (isWater(t[r][c])) block[r][c] = true;
   }
   const free = (c, r) => !block[r][c] && !obj[r][c] && !isWater(t[r][c]) && t[r][c] !== G.WOOD && !G.PATH.includes(t[r][c])
@@ -201,6 +201,7 @@ class Main extends Phaser.Scene {
       this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h });
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
+    this.load.json('propdefs', 'assets/props.json');
     if (this.textures.exists('vfx-boss') || true) this.load.image('vfx-boss', 'assets/lt/vfx-boss.webp');
     for (const [k, v] of Object.entries(M.vfx)) this.load.spritesheet('vfx:' + k, LT + v.file, { frameWidth: v.w, frameHeight: v.h });
     for (const [k, f] of Object.entries(M.bgm)) this.load.audio(k, LT + f);
@@ -235,7 +236,15 @@ class Main extends Phaser.Scene {
 
   create() {
     this.makeTextures(); this.makeAnims();
+    try { window.KT_PROPS = this.cache.json.get('propdefs') || null; } catch (e) { window.KT_PROPS = null; }
+    // thư viện vật thể dùng chung (data-driven): id -> file, anchor, bóng, bán kính chặn
+    // (gộp thư viện props sau khi OH/SH được khai báo — xem bên dưới)
+    const MINPROP = 1.6;   // khoảng cách tối thiểu giữa 2 vật thể (ô)
     const map = this.map = genMap(MAPCFG.seed);
+    { const keep = [];
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { const p = map.obj[r][c]; if (!p) continue;
+        let ok = true; for (const k of keep) if (Math.hypot(k[0] - c, k[1] - r) < MINPROP) { ok = false; break; }
+        if (ok) keep.push([c, r]); else { map.obj[r][c] = null; map.block[r][c] = false; } } }
     // công trình thôn quanh quảng trường (đặt tay, không ngẫu nhiên)
     const STRUCTS = [['gate', 10, 14], ['flag', 9, 8], ['drum', 12, 9], ['well', 8, 12]];
     for (const [k, c, r] of STRUCTS) if (c > 0 && r > 0 && c < N && r < N) { map.obj[r][c] = k; map.block[r][c] = true; }
@@ -249,7 +258,8 @@ class Main extends Phaser.Scene {
     const groundMs = Math.round(performance.now() - tG0);
     // vật cản theo chân vật thể (hình tròn) + nước
     this.obs = KTGround.buildObstacles(map, G);
-    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) map.block[r][c] = this.obs.solid(c, r);
+    for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) map.block[r][c] = this.obs.solid(c, r);
+    // viền ngoài chỉ là hình: đi lại đã bị solid() chặn ở biên
     let nGround = 1;
     // lớp 2: chi tiết nhỏ (cỏ, hoa, sỏi) — đã nướng vào texture nền để không tốn 3.500 sprite
     this.props = [];
@@ -258,6 +268,10 @@ class Main extends Phaser.Scene {
       'house-a': 0.93, 'house-b': 0.93, 'house-c': 0.93, 'house-d': 0.93, 'house-e': 0.93, 'house-f': 0.93, gate: 0.97, flag: 0.99, drum: 0.93, well: 0.94 };
     const SH = { pine: 0.9, oak: 1.3, sakura: 1.2, rock: 1.1, bush: 0.8, lantern: 0.5,
       'house-a': 1.5, 'house-b': 1.5, 'house-c': 1.5, 'house-d': 1.5, 'house-e': 1.5, 'house-f': 1.5, gate: 1.5, flag: 0.7, drum: 1.0, well: 1.0 };
+    if (window.KT_PROPS) { for (const k in window.KT_PROPS) { const d = window.KT_PROPS[k];
+      if (d.anchor != null) OH[k] = d.anchor;
+      if (d.shadow != null) SH[k] = d.shadow;
+      if (d.rad != null) { window.KTGround.RAD_OVERRIDE = window.KTGround.RAD_OVERRIDE || {}; window.KTGround.RAD_OVERRIDE[k] = d.rad; } } }
     let nObj = 0;
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
       const p = map.obj[r][c]; if (!p) continue;

@@ -206,12 +206,14 @@
 
   /* Vật cản theo CHÂN vật thể (hình tròn), không chặn cả ô */
   const RAD = { pine: 0.34, oak: 0.38, sakura: 0.36, rock: 0.32, lantern: 0.18, bush: 0.0,
-    'house-a': 0.62, 'house-b': 0.62, 'house-c': 0.62, 'house-d': 0.62, 'house-e': 0.62, 'house-f': 0.62 };
+    'house-a': 0.62, 'house-b': 0.62, 'house-c': 0.62, 'house-d': 0.62, 'house-e': 0.62, 'house-f': 0.62,
+    gate: 0.7, flag: 0.16, drum: 0.24, well: 0.3 };
   function buildObstacles(map, G) {
     const list = [];
     for (let r = 0; r < map.N; r++) for (let c = 0; c < map.N; c++) {
       const p = map.obj[r][c];
-      if (p && RAD[p] > 0) list.push({ c: c, r: r, rad: RAD[p], kind: p });
+      const rad = (window.KTGround && window.KTGround.RAD_OVERRIDE && window.KTGround.RAD_OVERRIDE[p] != null) ? window.KTGround.RAD_OVERRIDE[p] : RAD[p];
+      if (p && rad > 0) list.push({ c: c, r: r, rad: rad, kind: p });
     }
     // nước chặn cả ô (nhưng cho phép đi trên cầu gỗ)
     const water = new Uint8Array(map.N * map.N);
@@ -227,12 +229,31 @@
         bins.get(k).push(o);
       }
     }
+    // ---- lưới mịn 64x32 (2x2 ô con mỗi ô 128x64) — chặn theo CHÂN vật thể ----
+    const SUB = 2, FN = map.N * SUB;
+    const fine = new Uint8Array(FN * FN);
+    for (const o of list) {
+      const rad = o.rad + 0.22;                       // bán kính + thân nhân vật
+      const c0 = Math.floor((o.c - rad) * SUB), c1 = Math.ceil((o.c + rad) * SUB);
+      const r0 = Math.floor((o.r - rad) * SUB), r1 = Math.ceil((o.r + rad) * SUB);
+      for (let rr = r0; rr <= r1; rr++) for (let cc = c0; cc <= c1; cc++) {
+        if (rr < 0 || cc < 0 || rr >= FN || cc >= FN) continue;
+        const wx = (cc + 0.5) / SUB, wy = (rr + 0.5) / SUB;   // tâm ô con trong hệ ô
+        if (Math.hypot(wx - o.c, wy - o.r) < rad) fine[rr * FN + cc] = 1;
+      }
+    }
+    let fineBlocked = 0; for (let i = 0; i < fine.length; i++) fineBlocked += fine[i];
+    const finePct = fineBlocked / fine.length * 100;
+
     return {
-      list, water, bins, CELL, N: map.N,
+      list, water, bins, CELL, N: map.N, fine, SUB, FN, finePct, fineBlocked,
       solid(c, r) {
         if (c < 1 || r < 1 || c > map.N - 2.02 || r > map.N - 2.02) return true;
         const ci = Math.round(c), ri = Math.round(r);
         if (ci >= 0 && ri >= 0 && ci < map.N && ri < map.N && water[ri * map.N + ci]) return true;
+        // lưới mịn trước: nhanh và chặn đúng theo chân vật thể
+        const fc = Math.floor(c * SUB), fr = Math.floor(r * SUB);
+        if (fc >= 0 && fr >= 0 && fc < FN && fr < FN && fine[fr * FN + fc]) return true;
         const arr = bins.get(Math.floor(c / CELL) + ',' + Math.floor(r / CELL));
         if (!arr) return false;
         const pr = 0.22; // bán kính thân nhân vật (đơn vị ô)
