@@ -40,6 +40,21 @@ const SPOTS = [
   { c: 43, r: 41, char: 'bach-dien', name: 'Bạch Điện', lv: 8, n: 4, aggro: true, area: 'Đồi Bạch Điện', tint: 0xffffff },
 ];
 
+const MAPS = {
+  1: { seed: 20261108, bgm: 'bgm-field' },
+  2: { seed: 20261211, bgm: 'bgm-forest', village: { c: 9, r: 44, name: 'Trại Rừng Thề' },
+    spots: [
+      { c: 22, r: 36, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 11, n: 5, aggro: true, area: 'Rừng Tên Lạc', tint: 0xdfffd6 },
+      { c: 35, r: 23, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 14, n: 6, aggro: true, area: 'Rừng Thề Sâu', tint: 0xc6e8ff },
+      { c: 44, r: 11, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 16, n: 0, aggro: true, area: 'Gốc Cổ Thụ', tint: 0xffffff },
+    ] },
+};
+const MAP_ID = (() => { try { const d = JSON.parse(localStorage.getItem('ttbd-save-v1') || 'null'); return d && d.map === 2 ? 2 : 1; } catch (e) { return 1; } })();
+const MAPCFG = MAPS[MAP_ID];
+if (MAPCFG.village) Object.assign(VILLAGE, MAPCFG.village);
+if (MAPCFG.spots) SPOTS.splice(0, SPOTS.length, ...MAPCFG.spots);
+
+
 function genMap(seed) {
   const R = rng(seed);
   const t = [], obj = [], block = [], deco = [];
@@ -218,7 +233,7 @@ class Main extends Phaser.Scene {
 
   create() {
     this.makeTextures(); this.makeAnims();
-    const map = this.map = genMap(20261108);
+    const map = this.map = genMap(MAPCFG.seed);
     // lớp 1: nền vẽ LIỀN — một texture cho cả map, không lặp ô 128×64
     map.N = N;
     const tG0 = performance.now();
@@ -271,7 +286,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
 
     this.drawMinimap();
     this.musicOn = true;
-    try { this.music = this.sound.add('bgm-field', { loop: true, volume: 0.35 }); } catch (e) { this.music = null; HUD.log('Không nạp được nhạc nền'); }
+    try { this.music = this.sound.add(MAPCFG.bgm, { loop: true, volume: 0.35 }); } catch (e) { this.music = null; HUD.log('Không nạp được nhạc nền'); }
     this.tryMusic();
     // Trình duyệt chặn tự phát nhạc: mở khoá ở lần chạm/phím đầu tiên
     this.input.on('pointerdown', () => this.tryMusic());

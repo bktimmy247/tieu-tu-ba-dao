@@ -225,6 +225,114 @@
      "footY": 107.8
     }
    }
+  },
+  "lang-nguyet": {
+   "clips": {
+    "idle": {
+     "file": "lang-nguyet-idle.webp",
+     "frames": 15,
+     "cols": 6,
+     "w": 88,
+     "h": 110,
+     "ms": 140,
+     "pivotX": 48.5,
+     "footY": 79.2
+    },
+    "run": {
+     "file": "lang-nguyet-run.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 96,
+     "h": 70,
+     "ms": 75,
+     "pivotX": 41.5,
+     "footY": 68.8
+    },
+    "basic": {
+     "file": "lang-nguyet-basic.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 196,
+     "h": 110,
+     "ms": 70,
+     "pivotX": 98.0,
+     "footY": 79.2
+    },
+    "hit": {
+     "file": "lang-nguyet-hit.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 120,
+     "h": 80,
+     "ms": 50,
+     "pivotX": 60.0,
+     "footY": 78.8
+    },
+    "fall-die": {
+     "file": "lang-nguyet-fall-die.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 120,
+     "h": 110,
+     "ms": 80,
+     "pivotX": 60.0,
+     "footY": 79.2
+    }
+   }
+  },
+  "tieu-linh": {
+   "clips": {
+    "idle": {
+     "file": "tieu-linh-idle.webp",
+     "frames": 15,
+     "cols": 6,
+     "w": 132,
+     "h": 102,
+     "ms": 140,
+     "pivotX": 66.0,
+     "footY": 100.5
+    },
+    "run": {
+     "file": "tieu-linh-run.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 220,
+     "h": 92,
+     "ms": 75,
+     "pivotX": 110.0,
+     "footY": 89.0
+    },
+    "basic": {
+     "file": "tieu-linh-basic.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 176,
+     "h": 98,
+     "ms": 70,
+     "pivotX": 88.0,
+     "footY": 96.0
+    },
+    "hit": {
+     "file": "tieu-linh-hit.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 188,
+     "h": 102,
+     "ms": 50,
+     "pivotX": 72.0,
+     "footY": 100.5
+    },
+    "fall-die": {
+     "file": "tieu-linh-fall-die.webp",
+     "frames": 9,
+     "cols": 6,
+     "w": 144,
+     "h": 104,
+     "ms": 80,
+     "pivotX": 72.0,
+     "footY": 102.0
+    }
+   }
   }
  },
  "vfx": {
@@ -248,7 +356,8 @@
   }
  },
  "bgm": {
-  "bgm-field": "bgm-field.mp3"
+  "bgm-field": "bgm-field.mp3",
+  "bgm-forest": "bgm-forest.mp3"
  },
  "sfx": {
   "atk": "sfx-atk.mp3",
