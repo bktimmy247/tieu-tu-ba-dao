@@ -35,19 +35,32 @@ const fbm = (x, y, s) => (vnoise(x, y, s) * 0.6 + vnoise(x * 2.1, y * 2.1, s + 7
 
 /* ---------------- Sinh map ---------------- */
 const VILLAGE = { c: 10, r: 10, name: 'Thôn Vân Sơn' };
+// 9 bãi quái, mỗi bãi ~20 con (map 56x56). Lv tăng dần theo khoảng cách từ làng.
 const SPOTS = [
-  { c: 17, r: 27, char: 'tinh-mac', name: 'Tịnh Mặc', lv: 1, n: 5, aggro: false, area: 'Bãi Tịnh Mặc', tint: 0xffffff },
-  { c: 35, r: 19, char: 'lang-tieu', name: 'Lăng Tiêu', lv: 4, n: 5, aggro: true, area: 'Rừng Lăng Tiêu', tint: 0xffffff },
-  { c: 43, r: 41, char: 'bach-dien', name: 'Bạch Điện', lv: 8, n: 4, aggro: true, area: 'Đồi Bạch Điện', tint: 0xffffff },
+  { c: 17, r: 27, char: 'tinh-mac',   name: 'Tịnh Mặc',   lv: 1,  n: 20, aggro: false, area: 'Bãi Tịnh Mặc',    tint: 0xffffff },
+  { c: 28, r: 14, char: 'tinh-mac',   name: 'Tịnh Mặc',   lv: 3,  n: 20, aggro: false, area: 'Đồng Tịnh Mặc',   tint: 0xffffff },
+  { c: 35, r: 19, char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 5,  n: 20, aggro: true,  area: 'Rừng Lăng Tiêu',  tint: 0xffffff },
+  { c: 20, r: 40, char: 'lang-nguyet',name: 'Lăng Nguyệt',lv: 7,  n: 20, aggro: true,  area: 'Bờ Lăng Nguyệt',  tint: 0xffffff },
+  { c: 43, r: 41, char: 'bach-dien',  name: 'Bạch Điện',  lv: 9,  n: 20, aggro: true,  area: 'Đồi Bạch Điện',   tint: 0xffffff },
+  { c: 44, r: 24, char: 'lang-nguyet',name: 'Lăng Nguyệt',lv: 11, n: 20, aggro: true,  area: 'Rừng Nguyệt',     tint: 0xffffff },
+  { c: 33, r: 33, char: 'tieu-linh',  name: 'Tiểu Linh',  lv: 13, n: 20, aggro: true,  area: 'Gốc Tiểu Linh',   tint: 0xffffff },
+  { c: 12, r: 44, char: 'tieu-linh',  name: 'Tiểu Linh',  lv: 15, n: 20, aggro: true,  area: 'Rừng Sâu',        tint: 0xffffff },
+  { c: 46, r: 9,  char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 17, n: 20, aggro: true,  area: 'Vực Lăng Tiêu',   tint: 0xffffff },
 ];
 
 const MAPS = {
   1: { seed: 20261108, bgm: 'bgm-field' },
   2: { seed: 20261211, bgm: 'bgm-forest', village: { c: 9, r: 44, name: 'Trại Rừng Thề' },
     spots: [
-      { c: 22, r: 36, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 11, n: 5, aggro: true, area: 'Rừng Tên Lạc', tint: 0xdfffd6 },
-      { c: 35, r: 23, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 14, n: 6, aggro: true, area: 'Rừng Thề Sâu', tint: 0xc6e8ff },
-      { c: 44, r: 11, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 16, n: 0, aggro: true, area: 'Gốc Cổ Thụ', tint: 0xffffff },
+      { c: 22, r: 36, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 11, n: 20, aggro: true, area: 'Rừng Tên Lạc', tint: 0xdfffd6 },
+      { c: 35, r: 23, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 14, n: 20, aggro: true, area: 'Rừng Thề Sâu', tint: 0xc6e8ff },
+      { c: 44, r: 11, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 16, n: 20, aggro: true, area: 'Gốc Cổ Thụ', tint: 0xffffff },
+      { c: 14, r: 30, char: 'tieu-linh', name: 'Tiểu Linh', lv: 12, n: 20, aggro: true, area: 'Bụi Linh', tint: 0xffe6c6 },
+      { c: 28, r: 42, char: 'tieu-linh', name: 'Tiểu Linh', lv: 15, n: 20, aggro: true, area: 'Linh Sâu', tint: 0xffe6c6 },
+      { c: 40, r: 34, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 17, n: 20, aggro: true, area: 'Nguyệt Cao', tint: 0xc6e8ff },
+      { c: 18, r: 16, char: 'lang-tieu', name: 'Lăng Tiêu', lv: 13, n: 20, aggro: true, area: 'Tiêu Rậm', tint: 0xffffff },
+      { c: 46, r: 28, char: 'lang-tieu', name: 'Lăng Tiêu', lv: 18, n: 20, aggro: true, area: 'Tiêu Vực', tint: 0xffffff },
+      { c: 10, r: 20, char: 'tinh-mac', name: 'Tịnh Mặc', lv: 10, n: 20, aggro: true, area: 'Mặc Đồng', tint: 0xffffff },
     ] },
 };
 const MAP_ID = (() => { try { const d = JSON.parse(localStorage.getItem('ttbd-save-v1') || 'null'); return d && d.map === 2 ? 2 : 1; } catch (e) { return 1; } })();
@@ -641,6 +654,9 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
     for (const m of this.mobs) {
       if (m.dead) { this.place(m); continue; }
       const dh = Math.hypot(h.c - m.c, h.r - m.r), dHome = Math.hypot(m.c - m.home.c, m.r - m.home.r);
+      // CULL: xa hơn 24 ô thì tắt hiển thị + không chạy AI (map có ~180 con)
+      if (dh > 24) { m.spr.setVisible(false); if (m.shadow) m.shadow.setVisible(false); if (m.bar) m.bar.setVisible(false); if (m.label) m.label.setVisible(false); continue; }
+      else { m.spr.setVisible(true); if (m.shadow) m.shadow.setVisible(true); }
       const busy = (m.clip === 'basic' || m.clip === 'hit') && (m.spr.anims && m.spr.anims.isPlaying);
       if (m.state !== 'chase' && m.spot.aggro && !h.dead && dh < 3.5) { m.state = 'chase'; }
       if (m.state === 'chase') {
