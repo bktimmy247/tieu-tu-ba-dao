@@ -552,6 +552,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
   }
 
   update(time, deltaMs) {
+    if (this.afkLock) return;
     this.cull(time);
     // dt theo GIỜ THỰC, không phụ thuộc nhịp khung hình của trình duyệt
     const nowMs = performance.now();
