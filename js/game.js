@@ -299,7 +299,8 @@ class Main extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(isoX(0, N - 1) - 200, -200, N * TW + 400, N * TH + 400);
     cam.startFollow(this.hero.spr, true, 0.12, 0.12);
-    cam.setZoom(innerWidth >= innerHeight ? Math.min(1.15, Math.max(0.95, innerHeight / 430)) : Math.min(1.2, Math.max(0.82, innerWidth / 470)));
+    // Zoom xa hơn để thấy toàn cảnh map; landscape phone ~0.78 thay vì ~0.96
+    cam.setZoom(innerWidth >= innerHeight ? Math.min(0.92, Math.max(0.72, innerHeight / 530)) : Math.min(1.05, Math.max(0.72, innerWidth / 520)));
     cam.setBackgroundColor('#0d1408');
 
     // input
