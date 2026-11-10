@@ -355,8 +355,8 @@ class Main extends Phaser.Scene {
     // input
     this.input.on('pointerdown', p => this.onClick(p.worldX, p.worldY));
     const kb = this.input.keyboard;
-    kb.on('keydown-A', () => this.toggleAuto()); kb.on('keydown-ONE', () => this.castSkill()); kb.on('keydown-TWO', () => this.usePot());
-$('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onclick = () => { this.sfx('ui'); this.castSkill(); }; $('skPot').onclick = () => { this.sfx('ui'); this.usePot(); };
+    kb.on('keydown-A', () => this.toggleAuto()); kb.on('keydown-M', () => this.toggleOverview()); kb.on('keydown-ONE', () => this.castSkill()); kb.on('keydown-TWO', () => this.usePot());
+if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onclick = () => { this.sfx('ui'); this.castSkill(); }; $('skPot').onclick = () => { this.sfx('ui'); this.usePot(); };
 
     this.drawMinimap();
     this.musicOn = true;
@@ -470,6 +470,15 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
     const p = astar(this.map.block, Math.round(h.c), Math.round(h.r), Math.round(c), Math.round(r));
     h.path = p ? p.slice(1).map(([a, b]) => ({ c: a, r: b })) : null;
     return !!p;
+  }
+
+  toggleOverview(force) {
+    const on = force === undefined ? !this.overview : !!force;
+    this.overview = on;
+    const cam = this.cameras.main;
+    cam.setZoom(on ? 0.11 * DPR : camZoomFor(innerWidth, innerHeight));
+    HUD.toast(on ? 'Toàn map · bấm M để quay lại' : 'Quay lại');
+    for (const m of this.mobs) if (!m.dead) { m.spr.setVisible(true); if (m.shadow) m.shadow.setVisible(true); }
   }
 
   toggleAuto() { this.hero.auto = !this.hero.auto; $('skAuto').classList.toggle('on', this.hero.auto); HUD.log(this.hero.auto ? 'Bật tự đánh' : 'Tắt tự đánh'); }
@@ -655,7 +664,7 @@ $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onc
       if (m.dead) { this.place(m); continue; }
       const dh = Math.hypot(h.c - m.c, h.r - m.r), dHome = Math.hypot(m.c - m.home.c, m.r - m.home.r);
       // CULL: xa hơn 24 ô thì tắt hiển thị + không chạy AI (map có ~180 con)
-      if (dh > 24) { m.spr.setVisible(false); if (m.shadow) m.shadow.setVisible(false); if (m.bar) m.bar.setVisible(false); if (m.label) m.label.setVisible(false); continue; }
+      if (!this.overview && dh > 24) { m.spr.setVisible(false); if (m.shadow) m.shadow.setVisible(false); if (m.bar) m.bar.setVisible(false); if (m.label) m.label.setVisible(false); continue; }
       else { m.spr.setVisible(true); if (m.shadow) m.shadow.setVisible(true); }
       const busy = (m.clip === 'basic' || m.clip === 'hit') && (m.spr.anims && m.spr.anims.isPlaying);
       if (m.state !== 'chase' && m.spot.aggro && !h.dead && dh < 3.5) { m.state = 'chase'; }
