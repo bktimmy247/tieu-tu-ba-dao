@@ -217,6 +217,28 @@ class Boot extends Phaser.Scene {
   create() { this.scene.start('main'); }
 }
 
+
+/* ---- công thức sát thương kiểu TIÊU TỬ BÁ ĐẠO ----
+   Cấu trúc lấy từ dữ liệu server gốc:
+   - kỹ năng có bảng hệ số theo cấp (MAGIC_VALUE_NUM), nội suy tuyến tính (Calc:Link)
+   - phòng thủ giảm thương theo đường bão hoà: def/(def+K)
+   - chí mạng nhân 1.8 (tách riêng khỏi hệ số kỹ năng)
+*/
+const DMG_K = 80;                       // hằng số bão hoà phòng thủ (def=80 -> giảm 50%)
+const CRIT_RATE = 0.15, CRIT_MULT = 1.8;
+// hệ số kỹ năng theo bậc 5 cấp: cấp 1,5,10,15,20,25,30,35+
+const SKILL_COEF = [1.00, 1.18, 1.36, 1.58, 1.82, 2.06, 2.30, 2.54];
+function skillCoef(lv) {
+  const t = Math.max(0, (lv - 1) / 5), i = Math.min(SKILL_COEF.length - 2, Math.floor(t)), f = Math.min(1, t - i);
+  return SKILL_COEF[i] + (SKILL_COEF[i + 1] - SKILL_COEF[i]) * f;
+}
+function dmgCalc(atk, def, coef) {
+  const raw = atk * coef;
+  const red = def * (def / (def + DMG_K));          // giảm thương bão hoà
+  const v = 0.92 + Math.random() * 0.16;            // ±8%
+  return Math.max(1, Math.round((raw - red) * v));
+}
+
 class Main extends Phaser.Scene {
   constructor() { super('main'); }
   preload() {
@@ -519,7 +541,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     this.play(h, this.anims.get('lang-van:ultimate') ? 'ultimate' : 'basic', true); this.sfx('skill'); this.time.delayedCall(180, () => this.sfx('skill-vortex'));
     let n = 0;
     for (const m of this.mobs) if (!m.dead && Math.hypot(m.c - h.c, m.r - h.r) < 3.2) {
-      this.vfx('skill', m); this.time.delayedCall(560, () => { if (!m.dead) { this.sfx('skill-vfx'); this.damage(m, Math.round(h.atk * 2.2 * (0.9 + Math.random() * 0.2)), true); } });
+      this.vfx('skill', m); this.time.delayedCall(560, () => { if (!m.dead) { this.sfx('skill-vfx'); this.damage(m, dmgCalc(h.atk, m.def, skillCoef(h.lv) * 1.9), true); } });
       n++;
     }
     if (!n) this.vfx('skill', h);
@@ -676,7 +698,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
             const m = h.target;
             this.time.delayedCall(330, () => {
               if (m.dead || h.dead) return;
-              const crit = Math.random() < 0.15, dmg = Math.max(1, Math.round((h.atk - m.def) * (0.85 + Math.random() * 0.3) * (crit ? 1.8 : 1)));
+              const crit = Math.random() < CRIT_RATE; let dmg = dmgCalc(h.atk, m.def, skillCoef(h.lv)); if (crit) dmg = Math.round(dmg * CRIT_MULT);
               this.vfx('hit', m); this.damage(m, dmg, crit);
             });
           } else if (!busy) this.play(h, 'idle');
@@ -710,7 +732,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
           this.faceTo(m, h);
           if (time >= m.nextAtk && !busy) {
             m.nextAtk = time + 1400; this.play(m, 'basic', true);
-            this.time.delayedCall(380, () => { if (m.dead || h.dead) return; if (Math.hypot(h.c - m.c, h.r - m.r) < 1.6) this.damage(h, Math.max(1, Math.round((m.atk - h.def) * (0.85 + Math.random() * 0.3)))); });
+            this.time.delayedCall(380, () => { if (m.dead || h.dead) return; if (Math.hypot(h.c - m.c, h.r - m.r) < 1.6) this.damage(h, dmgCalc(m.atk, h.def, 1.0)); });
           } else if (!busy) this.play(m, 'idle');
         }
       } else if (m.state === 'return') {
