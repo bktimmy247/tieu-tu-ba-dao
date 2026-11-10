@@ -619,7 +619,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     if (u.dead) return;
     u.hp -= dmg;
     if (u === this.hero) { this.floatText(u, '-' + dmg, '#ff6a5a'); this.sfx('hit'); }
-    else { this.floatText(u, (crit ? 'Bạo kích ' : '') + dmg, crit ? '#ffd23a' : '#ffffff', crit); this.sfx('mob-hit'); if (u.state !== 'chase') { u.state = 'chase'; u.prey = this.hero; } }
+    else { this.floatText(u, (crit ? 'Bạo kích ' : '') + dmg, crit ? '#ffd23a' : '#ffffff', crit); this.sfx('mob-hit'); u.provoked = true; if (u.state !== 'chase') { u.state = 'chase'; u.prey = this.hero; } }
     if (u.hp <= 0) return this.kill(u);
     if (u.clip !== 'basic') this.play(u, 'hit', true);
     u.spr.setTintFill(0xffffff); this.time.delayedCall(60, () => { u.spr.clearTint(); if (u.spot && u.spot.tint !== 0xffffff) u.spr.setTint(u.spot.tint); });
@@ -639,7 +639,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     const exp = Math.round((12 + u.lv * 10) * (u.elite ? 8 : 1) * (buff ? 1.5 : 1));
     if (u.elite) { this.time.delayedCall(120, () => { for (let i = 0; i < 2; i++) this.lootDebug && this.lootDebug.dropAt(u.c + (Math.random() - 0.5) * 0.9, u.r + (Math.random() - 0.5) * 0.9, this.lootDebug.makeItem(Math.max(1, u.lv - 3), false)); }); this.expBuff = performance.now() + 60000; HUD.toast('Lửa trại: +50% kinh nghiệm 60 giây'); }
     if (!u.elite && !u.isBoss) { this.killStreak = (this.killStreak || 0) + 1;
-      if (this.killStreak % 12 === 0) this.spawnElite(u.spot, u.si); }
+      if (this.killStreak % 100 === 0) this.spawnElite(u.spot, u.si); }
     h.exp += exp; HUD.log('Hạ ' + u.name + ' Lv' + u.lv + ' · +' + exp + ' kinh nghiệm');
     if (h.target === u) h.target = null;
     while (h.exp >= this.expNeed(h.lv)) { h.exp -= this.expNeed(h.lv); this.levelUp(); }
@@ -772,7 +772,9 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       if (!this.overview && dh > 24) { m.spr.setVisible(false); if (m.shadow) m.shadow.setVisible(false); if (m.bar) m.bar.setVisible(false); if (m.label) m.label.setVisible(false); continue; }
       else { m.spr.setVisible(true); if (m.shadow) m.shadow.setVisible(true); }
       const busy = (m.clip === 'basic' || m.clip === 'hit') && (m.spr.anims && m.spr.anims.isPlaying);
-      if (m.state !== 'chase' && m.spot.aggro && !h.dead && dh < 3.5) { m.state = 'chase'; }
+      // Quái ôn hoà: chỉ truy đuổi khi bị hero đánh trúng (provoked, set trong damage()).
+      // Boss cốt truyện giữ nguyên aggro theo khoảng cách; quái đang leash về bãi thì không bị kéo lại.
+      if (m.state !== 'chase' && m.state !== 'return' && !h.dead && dh < 3.5 && m.isBoss) { m.state = 'chase'; }
       if (m.state === 'chase') {
         if (h.dead || dHome > 9) { m.state = 'return'; }
         else if (dh > 1.15) { if (!busy) { this.play(m, 'run'); this.stepToward(m, h.c, h.r, 1.6, dt); } }
@@ -785,7 +787,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
         }
       } else if (m.state === 'return') {
         this.play(m, 'run'); m.hp = Math.min(m.maxHp, m.hp + m.maxHp * dt * 0.5);
-        if (this.stepToward(m, m.home.c, m.home.r, 2.0, dt)) { m.state = 'idle'; m.hp = m.maxHp; }
+        if (this.stepToward(m, m.home.c, m.home.r, 2.0, dt)) { m.state = 'idle'; m.hp = m.maxHp; m.provoked = false; }
       } else if (m.state === 'idle') {
         if (!busy) this.play(m, 'idle');
         m.wait -= dt;
