@@ -252,6 +252,7 @@ class Main extends Phaser.Scene {
     this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
     this.load.image('map-full', 'assets/tex/map-full.jpg');
     this.load.json('propdefs', 'assets/props.json');
+    this.load.json('walkmask', 'assets/data/walkmask.json');
     this.load.image('arena', 'assets/arena.jpg');
     if (this.textures.exists('vfx-boss') || true) this.load.image('vfx-boss', 'assets/lt/vfx-boss.webp');
     for (const [k, v] of Object.entries(M.vfx)) this.load.spritesheet('vfx:' + k, LT + v.file, { frameWidth: v.w, frameHeight: v.h });
@@ -335,6 +336,22 @@ class Main extends Phaser.Scene {
     const groundMs = Math.round(performance.now() - tG0);
     // vật cản theo chân vật thể (hình tròn) + nước
     this.obs = KTGround.buildObstacles(map, G);
+    // ---- lớp chặn sinh từ TRANH NỀN (nhà/đá/nước vẽ trong ảnh) ----
+    { const wm = this.cache.json.get('walkmask');
+      if (wm && wm.w) {
+        const SUB = this.obs.SUB, FN = this.obs.FN, fine = this.obs.fine;
+        let painted = 0;
+        for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+          if (!wm.w[r] || !wm.w[r][c]) continue;
+          for (let dr = 0; dr < SUB; dr++) for (let dc = 0; dc < SUB; dc++) {
+            const rr = r * SUB + dr, cc = c * SUB + dc;
+            if (rr >= 0 && cc >= 0 && rr < FN && cc < FN && !fine[rr * FN + cc]) { fine[rr * FN + cc] = 1; painted++; }
+          }
+        }
+        let fb = 0; for (let i = 0; i < fine.length; i++) fb += fine[i];
+        this.obs.fineBlocked = fb; this.obs.finePct = fb / fine.length * 100;
+        this.walkmaskCells = painted;
+      } }
     for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) map.block[r][c] = this.obs.solid(c, r);
     // viền ngoài chỉ là hình: đi lại đã bị solid() chặn ở biên
     let nGround = 1;
