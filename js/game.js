@@ -334,6 +334,27 @@ class Main extends Phaser.Scene {
         if ((i * 7 + j * 3) % 2) im.setFlipX(true);
         this.plates.push(im); } }
     const groundMs = Math.round(performance.now() - tG0);
+    // ---- DỌN PROP TRÊN NỀN ĐÃ CHẶN ----
+    // walkmask sinh từ dữ liệu thật TIÊU TỬ BÁ ĐẠO: ô = 1 là chỗ tranh nền đã có nhà/đá/nước.
+    // Đặt thêm cây/đá lên đó là thừa và làm map bí -> bỏ hết, rồi giữ luật cách nhau >= 3.4 ô.
+    this.propTrim = { cutMask: 0, cutNear: 0, cutRock: 0 };
+    { const wmP = this.cache.json.get('walkmask');
+      if (wmP && wmP.w) {
+        const KEEP = /^(gate|flag|drum|well|lantern|shrine|cart|hut|bridge|house-)/;   // công trình đặt tay: giữ
+        const kept = [];
+        for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) {
+          const p = map.obj[r][c]; if (!p) continue;
+          if (KEEP.test(p)) { kept.push([c, r]); continue; }
+          if (wmP.w[r] && wmP.w[r][c]) { map.obj[r][c] = null; map.block[r][c] = false; this.propTrim.cutMask++; continue; }
+          // đá vụn: tranh nền đã có đá/sỏi vẽ sẵn -> bỏ để bớt chặn mà không mất chi tiết
+          if (p === 'rock') { map.obj[r][c] = null; map.block[r][c] = false; this.propTrim.cutRock++; }
+        }
+        for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) {
+          const p = map.obj[r][c]; if (!p || KEEP.test(p)) continue;
+          if (kept.some(([kc, kr]) => Math.hypot(kc - c, kr - r) < 3.4)) { map.obj[r][c] = null; map.block[r][c] = false; this.propTrim.cutNear++; continue; }
+          kept.push([c, r]);
+        }
+      } }
     // vật cản theo chân vật thể (hình tròn) + nước
     this.obs = KTGround.buildObstacles(map, G);
     // ---- lớp chặn sinh từ TRANH NỀN (nhà/đá/nước vẽ trong ảnh) ----
@@ -351,6 +372,16 @@ class Main extends Phaser.Scene {
         let fb = 0; for (let i = 0; i < fine.length; i++) fb += fine[i];
         this.obs.fineBlocked = fb; this.obs.finePct = fb / fine.length * 100;
         this.walkmaskCells = painted;
+      } }
+    // ---- NƯỚC "MA": nền sinh bằng noise nên có ô nước nằm đúng chỗ tranh nền là đất liền.
+    // Giữ chặn nước chỉ ở ô mà walkmask cũng chặn (nước thật của map gốc), còn lại bỏ -> hết tường vô hình.
+    { const wm = this.cache.json.get('walkmask');
+      this.propTrim.waterFree = 0;
+      if (wm && wm.w && this.obs.water) {
+        for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+          const i = r * N + c;
+          if (this.obs.water[i] && !(wm.w[r] && wm.w[r][c])) { this.obs.water[i] = 0; this.propTrim.waterFree++; }
+        }
       } }
     for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) map.block[r][c] = this.obs.solid(c, r);
     // viền ngoài chỉ là hình: đi lại đã bị solid() chặn ở biên
