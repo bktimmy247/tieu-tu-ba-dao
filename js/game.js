@@ -217,7 +217,7 @@ class Main extends Phaser.Scene {
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
-    for (let i = 0; i < 4; i++) this.load.image('sec' + i, 'assets/tex/sec' + i + '.webp');
+    this.load.image('map-full', 'assets/tex/map-full.jpg');
     this.load.json('propdefs', 'assets/props.json');
     this.load.image('arena', 'assets/arena.jpg');
     if (this.textures.exists('vfx-boss') || true) this.load.image('vfx-boss', 'assets/lt/vfx-boss.webp');
@@ -247,7 +247,7 @@ class Main extends Phaser.Scene {
 
   makeAnims() {
     for (const [cid, ch] of Object.entries(this.M.chars)) for (const [cl, c] of Object.entries(ch.clips))
-      { const hk = 'hdx:' + cid + ':' + cl; const src = (this.textures.exists(hk) && this.textures.get(hk).frameTotal > 1) ? hk : ((this.textures.exists(cid + ':' + cl) && this.textures.get(cid + ':' + cl).frameTotal > 1) ? cid + ':' + cl : null); if (src) this.anims.create({ key: cid + ':' + cl, frames: this.anims.generateFrameNumbers(src, { start: 0, end: c.frames - 1 }), frameRate: 1000 / c.ms, repeat: (cl === 'idle' || cl === 'run') ? -1 : 0 }); }
+      { const hk = 'hdx:' + cid + ':' + cl; const src = (this.textures.exists(hk) && this.textures.get(hk).frameTotal > 1) ? hk : ((this.textures.exists(cid + ':' + cl) && this.textures.get(cid + ':' + cl).frameTotal > 1) ? cid + ':' + cl : null); if (src) this.anims.create({ key: cid + ':' + cl, frames: this.anims.generateFrameNumbers(src, { start: 0, end: c.frames - 1 }), frameRate: (cl === 'run' ? 0.75 : 1) * 1000 / c.ms, repeat: (cl === 'idle' || cl === 'run') ? -1 : 0 }); }
     for (const [k, v] of Object.entries(this.M.vfx))
       if (this.textures.exists('vfx:' + k) && this.textures.get('vfx:' + k).frameTotal > 1) this.anims.create({ key: 'vfx:' + k, frames: this.anims.generateFrameNumbers('vfx:' + k, { start: 0, end: v.frames - 1 }), frameRate: 1000 / v.ms, repeat: 0 });
   }
@@ -287,7 +287,10 @@ class Main extends Phaser.Scene {
     const tex = { grass: texPix('tex-grass'), dirt: texPix('tex-dirt'), brick: texPix('tex-brick'), stone: texPix('tex-stone'), paint: texPix('tex-ground-paint') };
     const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 2, tex, plaza: { c: VILLAGE.c, r: VILLAGE.r, rad: 2.9 } });
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
-    // TOÀN MAP = 3x3 mảng tranh vẽ tay (2 mảng dùng lại có đảo), mép mờ chồng nhau 2%
+    // TOÀN MAP = 1 ảnh liền đã keystone (nghiêng vào trong), phủ đúng 7168x3584 world px
+    if (this.textures.exists('map-full')) { const wW = N * TW, wH = N * TH;
+      this.plates = [this.add.image(0, wH / 2, 'map-full').setDisplaySize(wW, wH).setDepth(-9.9e5)]; }
+    if (false)
     if (this.textures.exists('sec0')) { const COLS = 3, ROWS = 3;
       const W0 = (N * TW) / COLS, H0 = (N * TH) / ROWS, X0 = -N * TW / 2;
       this.plates = [];
@@ -633,7 +636,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       if (h.target && !h.target.dead) {
         const d = Math.hypot(h.target.c - h.c, h.target.r - h.r);
         if (d > 1.25) {
-          if (!busy) { this.play(h, 'run'); this.stepToward(h, h.target.c, h.target.r, 3.6, dt); }
+          if (!busy) { this.play(h, 'run'); this.stepToward(h, h.target.c, h.target.r, 2.1, dt); }
         } else {
           this.faceTo(h, h.target);
           if (time >= h.nextAtk && !busy) {
@@ -647,7 +650,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
           } else if (!busy) this.play(h, 'idle');
         }
       } else if (h.path && h.path.length) {
-        if (!busy) { this.play(h, 'run'); if (this.stepToward(h, h.path[0].c, h.path[0].r, 3.8, dt)) h.path.shift(); }
+        if (!busy) { this.play(h, 'run'); if (this.stepToward(h, h.path[0].c, h.path[0].r, 2.3, dt)) h.path.shift(); }
       } else {
         h.target = null; h.path = null;
         if (!busy) this.play(h, 'idle');
@@ -670,7 +673,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       if (m.state !== 'chase' && m.spot.aggro && !h.dead && dh < 3.5) { m.state = 'chase'; }
       if (m.state === 'chase') {
         if (h.dead || dHome > 9) { m.state = 'return'; }
-        else if (dh > 1.15) { if (!busy) { this.play(m, 'run'); this.stepToward(m, h.c, h.r, 2.6, dt); } }
+        else if (dh > 1.15) { if (!busy) { this.play(m, 'run'); this.stepToward(m, h.c, h.r, 1.6, dt); } }
         else {
           this.faceTo(m, h);
           if (time >= m.nextAtk && !busy) {
@@ -680,14 +683,14 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
         }
       } else if (m.state === 'return') {
         this.play(m, 'run'); m.hp = Math.min(m.maxHp, m.hp + m.maxHp * dt * 0.5);
-        if (this.stepToward(m, m.home.c, m.home.r, 3.2, dt)) { m.state = 'idle'; m.hp = m.maxHp; }
+        if (this.stepToward(m, m.home.c, m.home.r, 2.0, dt)) { m.state = 'idle'; m.hp = m.maxHp; }
       } else if (m.state === 'idle') {
         if (!busy) this.play(m, 'idle');
         m.wait -= dt;
         if (m.wait <= 0) { m.state = 'wander'; m.goal = { c: m.home.c + (Math.random() - 0.5) * 4, r: m.home.r + (Math.random() - 0.5) * 4 }; }
       } else if (m.state === 'wander') {
         this.play(m, 'run');
-        if (this.stepToward(m, m.goal.c, m.goal.r, 1.2, dt)) { m.state = 'idle'; m.wait = 2 + Math.random() * 4; }
+        if (this.stepToward(m, m.goal.c, m.goal.r, 0.7, dt)) { m.state = 'idle'; m.wait = 2 + Math.random() * 4; }
       }
       if (m.clip !== 'idle' && m.clip !== 'run' && !(m.spr.anims && m.spr.anims.isPlaying)) this.play(m, 'idle');
       this.place(m);
