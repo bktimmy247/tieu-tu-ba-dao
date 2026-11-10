@@ -158,6 +158,17 @@ function genMap(seed) {
       if (R() < (G.GRASS.includes(k) ? 0.55 : 0.35)) deco.push({ c: c + R() - 0.5, r: r + R() - 0.5, kind });
     }
   }
+  // LUẬT: vật cản phải cách nhau >= 2.2 ô (trừ vành ngoài map) -> bãi farm thoáng
+  const blocking = [];
+  for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) if (obj[r][c] && obj[r][c] !== 'bush') blocking.push([c, r]);
+  for (let i = 0; i < blocking.length; i++) {
+    const [c, r] = blocking[i];
+    if (Math.min(c, r, N - 1 - c, N - 1 - r) <= 4) continue;      // vành ngoài: cho phép dày
+    if (SPOTS.some(sp => Math.hypot(c - sp.c, r - sp.r) < 5.5)) { obj[r][c] = null; block[r][c] = false; continue; } // trong bãi: dọn sạch
+    let tooClose = false;
+    for (let j = 0; j < i; j++) { const [c2, r2] = blocking[j]; if (!obj[r2][c2]) continue; if (Math.hypot(c - c2, r - r2) < 2.2) { tooClose = true; break; } }
+    if (tooClose) { obj[r][c] = null; block[r][c] = false; }
+  }
   return { t, obj, block, deco };
 }
 
@@ -442,6 +453,21 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     }
   }
 
+  spawnElite(s, si) {
+    const R = Math.random;
+    let c, r, tries = 0;
+    do { c = s.c + (R() - 0.5) * 5; r = s.r + (R() - 0.5) * 5; } while (this.map.block[Math.round(r)][Math.round(c)] && tries++ < 20);
+    const u = this.makeUnit(s.char, c, r, { scale: 1.45, tint: 0xc07bff });
+    Object.assign(u, { spot: s, si, elite: true, name: 'Tinh Anh · ' + s.name, lv: s.lv + 2,
+      maxHp: Math.round((70 + s.lv * 45) * 6), atk: Math.round((5 + s.lv * 4) * 1.8), def: s.lv + 4,
+      home: { c, r }, state: 'idle', wait: 1, nextAtk: 0 });
+    u.hp = u.maxHp;
+    if (u.label) u.label.setColor('#d59bff');
+    this.mobs.push(u);
+    HUD.toast('Tinh Anh xuất hiện!'); this.vfx('skill', u); this.sfx('win');
+    return u;
+  }
+
   spawnMob(s, si) {
     const R = Math.random;
     let c, r, tries = 0;
@@ -537,12 +563,18 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       this.time.delayedCall(3000, () => { const h = this.hero; h.dead = false; h.hp = h.maxHp; h.mp = h.maxMp; h.c = VILLAGE.c; h.r = VILLAGE.r + 0.5; this.play(h, 'idle', true); });
       return;
     }
-    const h = this.hero, exp = 12 + u.lv * 10;
+    const h = this.hero;
+    // buff lửa trại: +50% kinh nghiệm
+    const buff = this.expBuff && performance.now() < this.expBuff;
+    const exp = Math.round((12 + u.lv * 10) * (u.elite ? 8 : 1) * (buff ? 1.5 : 1));
+    if (u.elite) { this.time.delayedCall(120, () => { for (let i = 0; i < 2; i++) this.lootDebug && this.lootDebug.dropAt(u.c + (Math.random() - 0.5) * 0.9, u.r + (Math.random() - 0.5) * 0.9, this.lootDebug.makeItem(Math.max(1, u.lv - 3), false)); }); this.expBuff = performance.now() + 60000; HUD.toast('Lửa trại: +50% kinh nghiệm 60 giây'); }
+    if (!u.elite && !u.isBoss) { this.killStreak = (this.killStreak || 0) + 1;
+      if (this.killStreak % 12 === 0) this.spawnElite(u.spot, u.si); }
     h.exp += exp; HUD.log('Hạ ' + u.name + ' Lv' + u.lv + ' · +' + exp + ' kinh nghiệm');
     if (h.target === u) h.target = null;
     while (h.exp >= this.expNeed(h.lv)) { h.exp -= this.expNeed(h.lv); this.levelUp(); }
     this.time.delayedCall(900, () => { this.tweens.add({ targets: [u.spr, u.shadow], alpha: 0, duration: 500, onComplete: () => { u.spr.destroy(); u.shadow.destroy(); u.bar.destroy(); u.label.destroy(); } }); });
-    this.time.delayedCall(8000, () => { this.mobs.splice(this.mobs.indexOf(u), 1); this.spawnMob(u.spot, u.si); });
+    this.time.delayedCall(8000, () => { const i = this.mobs.indexOf(u); if (i >= 0) this.mobs.splice(i, 1); if (!u.elite && !u.isBoss) this.spawnMob(u.spot, u.si); });
   }
 
   expNeed(lv) { return Math.round(40 * Math.pow(lv, 1.5)); }
