@@ -245,7 +245,7 @@ class Main extends Phaser.Scene {
     const M = this.M = this.cache.json.get('man');
     this.load.spritesheet('tiles', 'assets/tiles/terrain-base.png', { frameWidth: 128, frameHeight: 64 });
     for (const p of ['pine', 'oak', 'sakura', 'rock', 'bush', 'lantern', 'grass', 'bamboo', 'willow', 'bamboo-hedge', 'bamboo-clump', 'bamboo-strip', 'bamboo-far', 'bridge', 'shrine', 'paddy', 'hut', 'cart',
-      'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, 'assets/props3/' + p + '.webp');
+      'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, (p.startsWith('house-') ? 'assets/props2/' : 'assets/props3/') + p + '.webp');
     for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png'); for (const [cl, c] of Object.entries(ch.clips)) { this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); this.load.spritesheet('hdx:' + cid + ':' + cl, HDLT + c.file, { frameWidth: c.w * 2, frameHeight: c.h * 2 }); } }
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
@@ -356,6 +356,24 @@ class Main extends Phaser.Scene {
         }
       } }
     // vật cản theo chân vật thể (hình tròn) + nước
+    // VIỀN RỪNG: vành cây/đá ở 2-3 ô sát biên (đặt SAU khi dọn prop) cho rìa map có khung,
+    // chừa đường nối, làng và bãi quái; vành trong (ô thứ 3) thưa để không phá lối đi.
+    { const RB = rng(MAPCFG.seed + 909); let nb = 0;
+      for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) {
+        const e = Math.min(c, r, N - 1 - c, N - 1 - r);
+        if (e > 3 || map.obj[r][c]) continue;
+        const k = map.t[r][c];
+        if (G.PATH.includes(k) || k === G.WOOD || G.WATER.includes(k)) continue;
+        if (Math.hypot(c - VILLAGE.c, r - VILLAGE.r) < 9) continue;
+        if (SPOTS.some(s => Math.hypot(c - s.c, r - s.r) < 6)) continue;
+        const x = RB();
+        if (e === 3 && x > 0.55) continue;
+        const p = e <= 1 ? (x < 0.72 ? 'pine' : 'rock')
+          : e === 2 ? (x < 0.46 ? 'pine' : x < 0.72 ? 'oak' : x < 0.9 ? 'rock' : 'bamboo-clump')
+            : (x < 0.34 ? 'pine' : x < 0.62 ? 'rock' : 'bamboo-clump');
+        map.obj[r][c] = p; map.block[r][c] = true; nb++;
+      }
+      this.borderProps = nb; }
     this.obs = KTGround.buildObstacles(map, G);
     // ---- lớp chặn sinh từ TRANH NỀN (nhà/đá/nước vẽ trong ảnh) ----
     { const wm = this.cache.json.get('walkmask');

@@ -60,37 +60,37 @@
   "rad": 0.3
  },
  "house-a": {
-  "file": "assets/props3/house-a.webp",
+  "file": "assets/props2/house-a.webp",
   "anchor": 0.93,
   "shadow": 1.5,
   "rad": 0.62
  },
  "house-b": {
-  "file": "assets/props3/house-b.webp",
+  "file": "assets/props2/house-b.webp",
   "anchor": 0.93,
   "shadow": 1.5,
   "rad": 0.62
  },
  "house-c": {
-  "file": "assets/props3/house-c.webp",
+  "file": "assets/props2/house-c.webp",
   "anchor": 0.93,
   "shadow": 1.5,
   "rad": 0.62
  },
  "house-d": {
-  "file": "assets/props3/house-d.webp",
+  "file": "assets/props2/house-d.webp",
   "anchor": 0.93,
   "shadow": 1.5,
   "rad": 0.62
  },
  "house-e": {
-  "file": "assets/props3/house-e.webp",
+  "file": "assets/props2/house-e.webp",
   "anchor": 0.93,
   "shadow": 1.5,
   "rad": 0.62
  },
  "house-f": {
-  "file": "assets/props3/house-f.webp",
+  "file": "assets/props2/house-f.webp",
   "anchor": 0.93,
   "shadow": 1.5,
   "rad": 0.62
