@@ -355,6 +355,18 @@ class Main extends Phaser.Scene {
           kept.push([c, r]);
         }
       } }
+    // CHI TIẾT NỀN: rải hoa, bụi cỏ, sỏi, lá rụng (không chặn đường)
+    { const RD = rng(MAPCFG.seed + 4242); const names = Object.keys(window.KT_PROPS || {}).filter(k => k.startsWith('deco-'));
+      if (names.length) { let nd = 0;
+        for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) {
+          if (map.obj[r][c]) continue;
+          const k = map.t[r][c];
+          if (G.PATH.includes(k) || k === G.WOOD || G.WATER.includes(k)) continue;
+          if (RD() > 0.16) continue;
+          map.obj[r][c] = names[(RD() * names.length) | 0];
+          map.block[r][c] = false; nd++;
+        }
+        this.decoCount = nd; } }
     // vật cản theo chân vật thể (hình tròn) + nước
     // VIỀN RỪNG: vành cây/đá ở 2-3 ô sát biên (đặt SAU khi dọn prop) cho rìa map có khung,
     // chừa đường nối, làng và bãi quái; vành trong (ô thứ 3) thưa để không phá lối đi.

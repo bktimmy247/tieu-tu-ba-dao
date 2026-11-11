@@ -166,5 +166,131 @@
   "anchor": 0.98,
   "shadow": 0.9,
   "rad": 0.2
+ },
+ "deco-0": {
+  "file": "assets/deco/deco-0.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-1": {
+  "file": "assets/deco/deco-1.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-10": {
+  "file": "assets/deco/deco-10.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-11": {
+  "file": "assets/deco/deco-11.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-12": {
+  "file": "assets/deco/deco-12.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-13": {
+  "file": "assets/deco/deco-13.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-14": {
+  "file": "assets/deco/deco-14.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-15": {
+  "file": "assets/deco/deco-15.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-16": {
+  "file": "assets/deco/deco-16.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-17": {
+  "file": "assets/deco/deco-17.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-2": {
+  "file": "assets/deco/deco-2.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-3": {
+  "file": "assets/deco/deco-3.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-4": {
+  "file": "assets/deco/deco-4.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-5": {
+  "file": "assets/deco/deco-5.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-6": {
+  "file": "assets/deco/deco-6.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-7": {
+  "file": "assets/deco/deco-7.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-8": {
+  "file": "assets/deco/deco-8.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
+ },
+ "deco-9": {
+  "file": "assets/deco/deco-9.webp",
+  "anchor": 0.92,
+  "shadow": 0.0,
+  "rad": 0.0,
+  "deco": true
  }
 }
