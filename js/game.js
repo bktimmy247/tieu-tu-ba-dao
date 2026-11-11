@@ -47,6 +47,7 @@ const SPOTS = [
   { c: 12, r: 44, char: 'tieu-linh',  name: 'Tiểu Linh',  lv: 15, n: 15, aggro: true,  area: 'Rừng Sâu',        tint: 0xffffff },
   { c: 46, r: 9,  char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 17, n: 15, aggro: true,  area: 'Vực Lăng Tiêu',   tint: 0xffffff },
 ];
+window.SPOTS = SPOTS;   // cho quests.js đọc bãi quái
 
 const MAPS = {
   1: { seed: 20261108, bgm: 'bgm-field' },
@@ -492,6 +493,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     HUD.log('Đến ' + VILLAGE.name + '. Đi theo đường đất để tới bãi quái.');
     if (window.KTStory) { try { KTStory.install(this); } catch (e) { showErr('story: ' + e.message); } }
     if (window.KTLoot) { try { KTLoot.install(this); } catch (e) { showErr('loot: ' + e.message); } }
+    if (window.KTQuests) { try { KTQuests.install(this); } catch (e) { showErr('quest: ' + e.message); } }
     window.__kt = this; this.children.list.forEach(o => { if (o.texture && o.texture.key === '__MISSING') o.setVisible(false); });
   }
 
@@ -679,6 +681,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       return;
     }
     const h = this.hero;
+    if (window.KTQuests) { try { KTQuests.onKill(u); } catch (e) { } }
     // buff lửa trại: +50% kinh nghiệm
     const buff = this.expBuff && performance.now() < this.expBuff;
     const exp = Math.round((12 + u.lv * 10) * (u.elite ? 8 : 1) * (buff ? 1.5 : 1));
@@ -763,6 +766,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
 
   update(time, deltaMs) {
     if (window.KTTerrain && this.terrain) KTTerrain.update(this, this.overview);
+    if (window.KTQuests) { try { KTQuests.tick(this, 0.033); } catch (e) { } }
     if (this.afkLock) return;
     this.cull(time);
     // dt theo GIỜ THỰC, không phụ thuộc nhịp khung hình của trình duyệt
