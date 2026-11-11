@@ -1,12 +1,12 @@
 {
  "pine": {
-  "file": "assets/props3/pine.webp",
+  "file": "assets/props4/kt-pine.webp",
   "anchor": 0.97,
   "shadow": 0.9,
   "rad": 0.34
  },
  "oak": {
-  "file": "assets/props3/oak.webp",
+  "file": "assets/props4/kt-oak.webp",
   "anchor": 0.95,
   "shadow": 1.3,
   "rad": 0.38
@@ -18,13 +18,13 @@
   "rad": 0.36
  },
  "rock": {
-  "file": "assets/props3/rock.webp",
+  "file": "assets/props4/kt-rock.webp",
   "anchor": 0.85,
   "shadow": 1.1,
   "rad": 0.32
  },
  "bush": {
-  "file": "assets/props3/bush.webp",
+  "file": "assets/props4/kt-bush.webp",
   "anchor": 0.88,
   "shadow": 0.8,
   "rad": 0.0
@@ -36,10 +36,10 @@
   "rad": 0.18
  },
  "gate": {
-  "file": "assets/props3/gate.webp",
-  "anchor": 0.97,
-  "shadow": 1.5,
-  "rad": 0.7
+  "file": "assets/props4/kt-gate.webp",
+  "anchor": 0.95,
+  "shadow": 1.48,
+  "rad": 0.65
  },
  "flag": {
   "file": "assets/props3/flag.webp",
@@ -60,40 +60,40 @@
   "rad": 0.3
  },
  "house-a": {
-  "file": "assets/props2/house-a.webp",
-  "anchor": 0.93,
-  "shadow": 1.5,
-  "rad": 0.62
+  "file": "assets/props4/kt-house-a.webp",
+  "anchor": 0.95,
+  "shadow": 1.29,
+  "rad": 0.57
  },
  "house-b": {
-  "file": "assets/props2/house-b.webp",
-  "anchor": 0.93,
-  "shadow": 1.5,
-  "rad": 0.62
+  "file": "assets/props4/kt-house-b.webp",
+  "anchor": 0.95,
+  "shadow": 1.33,
+  "rad": 0.58
  },
  "house-c": {
-  "file": "assets/props2/house-c.webp",
-  "anchor": 0.93,
-  "shadow": 1.5,
-  "rad": 0.62
+  "file": "assets/props4/kt-house-c.webp",
+  "anchor": 0.95,
+  "shadow": 1.37,
+  "rad": 0.6
  },
  "house-d": {
-  "file": "assets/props2/house-d.webp",
-  "anchor": 0.93,
-  "shadow": 1.5,
-  "rad": 0.62
+  "file": "assets/props4/kt-house-d.webp",
+  "anchor": 0.95,
+  "shadow": 1.25,
+  "rad": 0.55
  },
  "house-e": {
-  "file": "assets/props2/house-e.webp",
-  "anchor": 0.93,
-  "shadow": 1.5,
-  "rad": 0.62
+  "file": "assets/props4/kt-house-e.webp",
+  "anchor": 0.95,
+  "shadow": 1.21,
+  "rad": 0.53
  },
  "house-f": {
-  "file": "assets/props2/house-f.webp",
-  "anchor": 0.93,
-  "shadow": 1.5,
-  "rad": 0.62
+  "file": "assets/props4/kt-house-f.webp",
+  "anchor": 0.95,
+  "shadow": 0.98,
+  "rad": 0.43
  },
  "grass": {
   "file": "assets/props3/grass.webp",
@@ -102,13 +102,13 @@
   "rad": 0.0
  },
  "bamboo": {
-  "file": "assets/props3/bamboo.webp",
+  "file": "assets/props4/kt-bamboo.webp",
   "anchor": 0.98,
   "shadow": 0.9,
   "rad": 0.34
  },
  "willow": {
-  "file": "assets/props3/willow.webp",
+  "file": "assets/props4/kt-willow.webp",
   "anchor": 0.98,
   "shadow": 1.2,
   "rad": 0.4
@@ -132,10 +132,10 @@
   "rad": 0.0
  },
  "hut": {
-  "file": "assets/props3/hut.webp",
+  "file": "assets/props4/kt-hut.webp",
   "anchor": 0.95,
-  "shadow": 1.4,
-  "rad": 0.58
+  "shadow": 1.02,
+  "rad": 0.45
  },
  "cart": {
   "file": "assets/props3/cart.webp",
@@ -144,25 +144,25 @@
   "rad": 0.3
  },
  "bamboo-hedge": {
-  "file": "assets/props3/bamboo-hedge.webp",
+  "file": "assets/props4/kt-bamboo-hedge.webp",
   "anchor": 0.98,
   "shadow": 0.9,
   "rad": 0.42
  },
  "bamboo-clump": {
-  "file": "assets/props3/bamboo-clump.webp",
+  "file": "assets/props4/kt-bamboo-clump.webp",
   "anchor": 0.98,
   "shadow": 0.9,
   "rad": 0.42
  },
  "bamboo-strip": {
-  "file": "assets/props3/bamboo-strip.webp",
+  "file": "assets/props4/kt-bamboo-strip.webp",
   "anchor": 0.98,
   "shadow": 0.9,
   "rad": 0.42
  },
  "bamboo-far": {
-  "file": "assets/props3/bamboo-far.webp",
+  "file": "assets/props4/kt-bamboo-far.webp",
   "anchor": 0.98,
   "shadow": 0.9,
   "rad": 0.2
