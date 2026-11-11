@@ -37,30 +37,30 @@ const fbm = (x, y, s) => (vnoise(x, y, s) * 0.6 + vnoise(x * 2.1, y * 2.1, s + 7
 const VILLAGE = { c: 10, r: 10, name: 'Thôn Vân Sơn' };
 // 9 bãi quái, mỗi bãi ~20 con (map 56x56). Lv tăng dần theo khoảng cách từ làng.
 const SPOTS = [
-  { c: 17, r: 27, char: 'tinh-mac',   name: 'Tịnh Mặc',   lv: 1,  n: 20, aggro: false, area: 'Bãi Tịnh Mặc',    tint: 0xffffff },
-  { c: 28, r: 14, char: 'tinh-mac',   name: 'Tịnh Mặc',   lv: 3,  n: 20, aggro: false, area: 'Đồng Tịnh Mặc',   tint: 0xffffff },
-  { c: 35, r: 19, char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 5,  n: 20, aggro: true,  area: 'Rừng Lăng Tiêu',  tint: 0xffffff },
-  { c: 20, r: 40, char: 'lang-nguyet',name: 'Lăng Nguyệt',lv: 7,  n: 20, aggro: true,  area: 'Bờ Lăng Nguyệt',  tint: 0xffffff },
-  { c: 43, r: 41, char: 'bach-dien',  name: 'Bạch Điện',  lv: 9,  n: 20, aggro: true,  area: 'Đồi Bạch Điện',   tint: 0xffffff },
-  { c: 44, r: 24, char: 'lang-nguyet',name: 'Lăng Nguyệt',lv: 11, n: 20, aggro: true,  area: 'Rừng Nguyệt',     tint: 0xffffff },
-  { c: 33, r: 33, char: 'tieu-linh',  name: 'Tiểu Linh',  lv: 13, n: 20, aggro: true,  area: 'Gốc Tiểu Linh',   tint: 0xffffff },
-  { c: 12, r: 44, char: 'tieu-linh',  name: 'Tiểu Linh',  lv: 15, n: 20, aggro: true,  area: 'Rừng Sâu',        tint: 0xffffff },
-  { c: 46, r: 9,  char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 17, n: 20, aggro: true,  area: 'Vực Lăng Tiêu',   tint: 0xffffff },
+  { c: 17, r: 27, char: 'tinh-mac',   name: 'Tịnh Mặc',   lv: 1,  n: 15, aggro: false, area: 'Bãi Tịnh Mặc',    tint: 0xffffff },
+  { c: 28, r: 14, char: 'tinh-mac',   name: 'Tịnh Mặc',   lv: 3,  n: 15, aggro: false, area: 'Đồng Tịnh Mặc',   tint: 0xffffff },
+  { c: 35, r: 19, char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 5,  n: 15, aggro: true,  area: 'Rừng Lăng Tiêu',  tint: 0xffffff },
+  { c: 20, r: 40, char: 'lang-nguyet',name: 'Lăng Nguyệt',lv: 7,  n: 15, aggro: true,  area: 'Bờ Lăng Nguyệt',  tint: 0xffffff },
+  { c: 43, r: 41, char: 'bach-dien',  name: 'Bạch Điện',  lv: 9,  n: 15, aggro: true,  area: 'Đồi Bạch Điện',   tint: 0xffffff },
+  { c: 44, r: 24, char: 'lang-nguyet',name: 'Lăng Nguyệt',lv: 11, n: 15, aggro: true,  area: 'Rừng Nguyệt',     tint: 0xffffff },
+  { c: 33, r: 33, char: 'tieu-linh',  name: 'Tiểu Linh',  lv: 13, n: 15, aggro: true,  area: 'Gốc Tiểu Linh',   tint: 0xffffff },
+  { c: 12, r: 44, char: 'tieu-linh',  name: 'Tiểu Linh',  lv: 15, n: 15, aggro: true,  area: 'Rừng Sâu',        tint: 0xffffff },
+  { c: 46, r: 9,  char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 17, n: 15, aggro: true,  area: 'Vực Lăng Tiêu',   tint: 0xffffff },
 ];
 
 const MAPS = {
   1: { seed: 20261108, bgm: 'bgm-field' },
   2: { seed: 20261211, bgm: 'bgm-forest', village: { c: 9, r: 44, name: 'Trại Rừng Thề' },
     spots: [
-      { c: 22, r: 36, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 11, n: 20, aggro: true, area: 'Rừng Tên Lạc', tint: 0xdfffd6 },
-      { c: 35, r: 23, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 14, n: 20, aggro: true, area: 'Rừng Thề Sâu', tint: 0xc6e8ff },
-      { c: 44, r: 11, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 16, n: 20, aggro: true, area: 'Gốc Cổ Thụ', tint: 0xffffff },
-      { c: 14, r: 30, char: 'tieu-linh', name: 'Tiểu Linh', lv: 12, n: 20, aggro: true, area: 'Bụi Linh', tint: 0xffe6c6 },
-      { c: 28, r: 42, char: 'tieu-linh', name: 'Tiểu Linh', lv: 15, n: 20, aggro: true, area: 'Linh Sâu', tint: 0xffe6c6 },
-      { c: 40, r: 34, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 17, n: 20, aggro: true, area: 'Nguyệt Cao', tint: 0xc6e8ff },
-      { c: 18, r: 16, char: 'lang-tieu', name: 'Lăng Tiêu', lv: 13, n: 20, aggro: true, area: 'Tiêu Rậm', tint: 0xffffff },
-      { c: 46, r: 28, char: 'lang-tieu', name: 'Lăng Tiêu', lv: 18, n: 20, aggro: true, area: 'Tiêu Vực', tint: 0xffffff },
-      { c: 10, r: 20, char: 'tinh-mac', name: 'Tịnh Mặc', lv: 10, n: 20, aggro: true, area: 'Mặc Đồng', tint: 0xffffff },
+      { c: 22, r: 36, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 11, n: 15, aggro: true, area: 'Rừng Tên Lạc', tint: 0xdfffd6 },
+      { c: 35, r: 23, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 14, n: 15, aggro: true, area: 'Rừng Thề Sâu', tint: 0xc6e8ff },
+      { c: 44, r: 11, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 16, n: 15, aggro: true, area: 'Gốc Cổ Thụ', tint: 0xffffff },
+      { c: 14, r: 30, char: 'tieu-linh', name: 'Tiểu Linh', lv: 12, n: 15, aggro: true, area: 'Bụi Linh', tint: 0xffe6c6 },
+      { c: 28, r: 42, char: 'tieu-linh', name: 'Tiểu Linh', lv: 15, n: 15, aggro: true, area: 'Linh Sâu', tint: 0xffe6c6 },
+      { c: 40, r: 34, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 17, n: 15, aggro: true, area: 'Nguyệt Cao', tint: 0xc6e8ff },
+      { c: 18, r: 16, char: 'lang-tieu', name: 'Lăng Tiêu', lv: 13, n: 15, aggro: true, area: 'Tiêu Rậm', tint: 0xffffff },
+      { c: 46, r: 28, char: 'lang-tieu', name: 'Lăng Tiêu', lv: 18, n: 15, aggro: true, area: 'Tiêu Vực', tint: 0xffffff },
+      { c: 10, r: 20, char: 'tinh-mac', name: 'Tịnh Mặc', lv: 10, n: 15, aggro: true, area: 'Mặc Đồng', tint: 0xffffff },
     ] },
 };
 const MAP_ID = (() => { try { const d = JSON.parse(localStorage.getItem('ttbd-save-v1') || 'null'); return d && d.map === 2 ? 2 : 1; } catch (e) { return 1; } })();
@@ -827,14 +827,14 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
         if (m.wait === undefined) m.wait = Math.random() * 10;   // lệch pha: không cả bãi cùng bước
         m.wait -= dt;
         if (m.wait <= 0) { // ~10 giây mới nhích 2-3 bước (0,5-0,8 ô), không rời chỗ quá 2,5 ô
-          const a = Math.random() * Math.PI * 2, d = 0.5 + Math.random() * 0.3;
+          const a = Math.random() * Math.PI * 2, d = 1.0 + Math.random() * 0.5;
           let gc = m.c + Math.cos(a) * d, gr = m.r + Math.sin(a) * d;
-          if (Math.hypot(gc - m.home.c, gr - m.home.r) > 2.5) { const k = d / Math.max(0.01, Math.hypot(m.home.c - m.c, m.home.r - m.r)); gc = m.c + (m.home.c - m.c) * k; gr = m.r + (m.home.r - m.r) * k; }
+          if (Math.hypot(gc - m.home.c, gr - m.home.r) > 3.2) { const k = d / Math.max(0.01, Math.hypot(m.home.c - m.c, m.home.r - m.r)); gc = m.c + (m.home.c - m.c) * k; gr = m.r + (m.home.r - m.r) * k; }
           m.state = 'wander'; m.goal = { c: gc, r: gr }; m.wanderT = 0; }
       } else if (m.state === 'wander') {
         this.play(m, 'run');
         m.wanderT = (m.wanderT || 0) + dt;
-        if (this.stepToward(m, m.goal.c, m.goal.r, 0.45, dt) || m.wanderT > 3) { m.state = 'idle'; m.wait = 8 + Math.random() * 4; }
+        if (this.stepToward(m, m.goal.c, m.goal.r, 0.45, dt) || m.wanderT > 3) { m.state = 'idle'; m.wait = 7.6 + Math.random() * 0.8; }
       }
       if (m.clip !== 'idle' && m.clip !== 'run' && !(m.spr.anims && m.spr.anims.isPlaying)) this.play(m, 'idle');
       this.place(m);
