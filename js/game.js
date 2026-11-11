@@ -245,12 +245,12 @@ class Main extends Phaser.Scene {
     const M = this.M = this.cache.json.get('man');
     this.load.spritesheet('tiles', 'assets/tiles/terrain-base.png', { frameWidth: 128, frameHeight: 64 });
     for (const p of ['pine', 'oak', 'sakura', 'rock', 'bush', 'lantern', 'grass', 'bamboo', 'willow', 'bamboo-hedge', 'bamboo-clump', 'bamboo-strip', 'bamboo-far', 'bridge', 'shrine', 'paddy', 'hut', 'cart',
-      'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, (p.startsWith('house-') ? 'assets/props2/' : 'assets/props3/') + p + '.webp');
+      'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, (p.startsWith('house-') ? 'assets/props2/' : 'assets/props3/') + p + '.webp?v=' + (window.__KT_VER || 26));
     for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png'); for (const [cl, c] of Object.entries(ch.clips)) { this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); this.load.spritesheet('hdx:' + cid + ':' + cl, HDLT + c.file, { frameWidth: c.w * 2, frameHeight: c.h * 2 }); } }
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
-    this.load.image('map-full', 'assets/tex/map-full.jpg');
+    this.load.image('map-full', 'assets/tex/map-full.jpg?v=' + (window.__KT_VER || 26));
     this.load.json('propdefs', 'assets/props.json');
     this.load.json('walkmask', 'assets/data/walkmask.json');
     this.load.image('arena', 'assets/arena.jpg');
@@ -450,8 +450,15 @@ class Main extends Phaser.Scene {
       for (let i = 0; i < 26; i++) { const t = i / 26; g.fillStyle(0x0a1208, t * 0.055); g.fillCircle(R0 * 0.62, R0 * 0.62, R0 * (0.74 - t * 0.46)); }
       g.generateTexture('vig', Math.round(R0 * 1.3), Math.round(R0 * 1.3)); g.destroy();
       const vig = this.add.image(innerWidth / 2, innerHeight / 2, 'vig').setScrollFactor(0).setDepth(9e5).setAlpha(0.55);
-      const fog = this.add.rectangle(innerWidth / 2, innerHeight * 0.12, innerWidth * 1.2, innerHeight * 0.5, 0xcfd8c0, 0.10).setScrollFactor(0).setDepth(9e4);
-      this.scale.on('resize', sz => { vig.setPosition(sz.width / 2, sz.height / 2).setDisplaySize(sz.width * 1.15, sz.height * 1.15); fog.setPosition(sz.width / 2, sz.height * 0.12).setSize(sz.width * 1.2, sz.height * 0.5); });
+      // sương mù phía xa: gradient mềm (bỏ rectangle phẳng -> hết hình chữ nhật mờ có cạnh cứng)
+      const cvF = document.createElement('canvas'); cvF.width = 8; cvF.height = 256;
+      const cf = cvF.getContext('2d'); const grF = cf.createLinearGradient(0, 0, 0, 256);
+      grF.addColorStop(0, 'rgba(207,216,192,0)'); grF.addColorStop(0.42, 'rgba(207,216,192,0.13)'); grF.addColorStop(1, 'rgba(207,216,192,0)');
+      cf.fillStyle = grF; cf.fillRect(0, 0, 8, 256);
+      if (this.textures.exists('haze')) this.textures.remove('haze');
+      this.textures.addCanvas('haze', cvF);
+      const fog = this.add.image(innerWidth / 2, innerHeight * 0.06, 'haze').setScrollFactor(0).setDepth(9e4).setDisplaySize(innerWidth, innerHeight * 0.5);
+      this.scale.on('resize', sz => { vig.setPosition(sz.width / 2, sz.height / 2).setDisplaySize(sz.width * 1.15, sz.height * 1.15); fog.setPosition(sz.width / 2, sz.height * 0.06).setDisplaySize(sz.width, sz.height * 0.5); });
       this.atmo = { vig, fog }; }
 
     // input
@@ -593,7 +600,14 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     const on = force === undefined ? !this.overview : !!force;
     this.overview = on;
     const cam = this.cameras.main;
-    cam.setZoom(on ? 0.11 * DPR : camZoomFor(innerWidth, innerHeight));
+    if (on) {
+      // zoom vua khit ca hinh thoi (truoc day fix 0.11 -> map chi chiem nua trai man hinh)
+      const zf = Math.min(this.scale.width / (N * TW + 160), this.scale.height / (N * TH + 120));
+      cam.stopFollow(); cam.setZoom(zf); cam.centerOn(0, N * TH / 2);
+    } else {
+      cam.setZoom(camZoomFor(innerWidth, innerHeight));
+      cam.startFollow(this.hero.spr, true, 0.12, 0.12);
+    }
     HUD.toast(on ? 'Toàn map · bấm M để quay lại' : 'Quay lại');
     for (const m of this.mobs) if (!m.dead) { m.spr.setVisible(true); if (m.shadow) m.shadow.setVisible(true); }
   }
