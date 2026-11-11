@@ -48,6 +48,7 @@ const SPOTS = [
   { c: 46, r: 9,  char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 17, n: 15, aggro: true,  area: 'Vực Lăng Tiêu',   tint: 0xffffff },
 ];
 window.SPOTS = SPOTS;   // cho quests.js đọc bãi quái
+window.VILLAGE = VILLAGE;   // cho feel.js biet moc vung lang
 
 const MAPS = {
   1: { seed: 20261108, bgm: 'bgm-field' },
@@ -441,7 +442,7 @@ class Main extends Phaser.Scene {
 
     // nhân vật
     { const _t = this.add.text.bind(this.add); this.add.text = (x, y, t, st) => _t(x, y, t, Object.assign({ resolution: DPR }, st || {})); }
-    this.sfx = k => { try { this.sound.play('sfx-' + k, { volume: k === 'voice' ? 0.6 : 0.45 }); } catch (e) { } };
+    this.sfx = k => { try { this.sound.play('sfx-' + k, { volume: k === 'voice' ? 0.6 : 0.45 }); const L = this.sfxLog || (this.sfxLog = []); L.push(k); if (L.length > 200) L.shift(); } catch (e) { } };
     this.hero = this.makeUnit('lang-van', VILLAGE.c, VILLAGE.r + 0.5, { hero: true, scale: 1.18 });
     Object.assign(this.hero, { name: 'Lăng Vân', lv: 1, exp: 0, hp: 200, maxHp: 200, mp: 80, maxMp: 80, atk: 22, def: 4, path: null, target: null, auto: false, cdSkill: 0, cdPot: 0, nextAtk: 0 });
     this.heroRing = this.add.image(0, 0, 'ringGold').setDepth(-7e5);
@@ -494,6 +495,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     if (window.KTStory) { try { KTStory.install(this); } catch (e) { showErr('story: ' + e.message); } }
     if (window.KTLoot) { try { KTLoot.install(this); } catch (e) { showErr('loot: ' + e.message); } }
     if (window.KTQuests) { try { KTQuests.install(this); } catch (e) { showErr('quest: ' + e.message); } }
+    if (window.KTFeel) { try { KTFeel.install(this); } catch (e) { showErr('feel: ' + e.message); } }
     window.__kt = this; this.children.list.forEach(o => { if (o.texture && o.texture.key === '__MISSING') o.setVisible(false); });
   }
 
@@ -633,7 +635,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     const h = this.hero; if (h.dead || h.cdSkill > 0) return;
     if (h.mp < 25) { HUD.log('Không đủ nội lực'); return; }
     h.mp -= 25; h.cdSkill = 6;
-    this.play(h, this.anims.get('lang-van:ultimate') ? 'ultimate' : 'basic', true); this.sfx('skill'); this.time.delayedCall(180, () => this.sfx('skill-vortex'));
+    this.play(h, this.anims.get('lang-van:ultimate') ? 'ultimate' : 'basic', true); this.sfx('skill'); this.shake(6, 180); this.time.delayedCall(180, () => this.sfx('skill-vortex'));
     let n = 0;
     for (const m of this.mobs) if (!m.dead && Math.hypot(m.c - h.c, m.r - h.r) < 3.2) {
       this.vfx('skill', m); this.time.delayedCall(560, () => { if (!m.dead) { this.sfx('skill-vfx'); this.damage(m, dmgCalc(h.atk, m.def, skillCoef(h.lv) * 1.9), true); } });
@@ -657,16 +659,24 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     { const a = this.anims.get('vfx:' + k); if (a && a.frames.length) { s.play('vfx:' + k); s.on('animationcomplete', () => s.destroy()); } else { s.destroy(); return; } }
   }
 
+  shake(px, ms) {
+    const cam = this.cameras.main; if (!cam || !cam.width) return;
+    try { cam.shake(ms, px / Math.max(320, cam.width), true); } catch (e) { }
+  }
+
   floatText(u, txt, color, big) {
     const t = this.add.text(u.spr.x + (Math.random() - 0.5) * 20, u.spr.y - 100 * u.scale, txt, { font: (big ? 'bold 22px' : 'bold 16px') + ' Segoe UI', color, stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(1e6 + 1);
+    const st = this.ft || (this.ft = { n: 0, live: 0 });
+    st.n++; st.live++; t.__ft = 1; t.once('destroy', () => { st.live--; });
     this.tweens.add({ targets: t, y: t.y - 40, alpha: 0, duration: 900, ease: 'Cubic.easeOut', onComplete: () => t.destroy() });
+    return t;
   }
 
   damage(u, dmg, crit) {
     if (u.dead) return;
     u.hp -= dmg;
-    if (u === this.hero) { this.floatText(u, '-' + dmg, '#ff6a5a'); this.sfx('hit'); }
-    else { this.floatText(u, (crit ? 'Bạo kích ' : '') + dmg, crit ? '#ffd23a' : '#ffffff', crit); this.sfx('mob-hit'); u.provoked = true; if (u.state !== 'chase') { u.state = 'chase'; u.prey = this.hero; } }
+    if (u === this.hero) { this.floatText(u, '-' + dmg, '#ff6a5a'); this.sfx('hit'); this.shake(4, 120); }
+    else { this.floatText(u, (crit ? 'Bạo kích ' : '') + dmg, crit ? '#ffd23a' : '#ffffff', crit); this.sfx('mob-hit'); this.shake(2, 80); u.provoked = true; if (u.state !== 'chase') { u.state = 'chase'; u.prey = this.hero; } }
     if (u.hp <= 0) return this.kill(u);
     if (u.clip !== 'basic') this.play(u, 'hit', true);
     u.spr.setTintFill(0xffffff); this.time.delayedCall(60, () => { u.spr.clearTint(); if (u.spot && u.spot.tint !== 0xffffff) u.spr.setTint(u.spot.tint); });
@@ -797,7 +807,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
             this.time.delayedCall(330, () => {
               if (m.dead || h.dead) return;
               const _miss = Math.min(0.3, Math.max(0.02, (m.dodge || 0) * 0.004 - (h.acc || 0) * 0.002));
-              if (Math.random() < _miss) { this.floatText(m, 'Né', '#9fd7ff'); return; }
+              if (Math.random() < _miss) { this.floatText(m, 'trượt', '#9fd7ff'); if (this.sfxMiss) this.sfxMiss(); return; }
               const crit = Math.random() < CRIT_RATE; let dmg = dmgCalc(h.atk, m.def, skillCoef(h.lv)); if (crit) dmg = Math.round(dmg * CRIT_MULT);
               this.vfx('hit', m); this.damage(m, dmg, crit);
             });
@@ -836,7 +846,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
             m.nextAtk = time + 1400; this.play(m, 'basic', true);
             this.time.delayedCall(380, () => { if (m.dead || h.dead) return; if (Math.hypot(h.c - m.c, h.r - m.r) < 1.6) {
                 const _dg = Math.min(0.4, Math.max(0, (h.dodge || 0) * 0.003 - (m.acc || 0) * 0.002));
-                if (Math.random() < _dg) { this.floatText(h, 'Né', '#9fd7ff'); return; }
+                if (Math.random() < _dg) { this.floatText(h, 'trượt', '#9fd7ff'); if (this.sfxMiss) this.sfxMiss(); return; }
                 this.damage(h, dmgCalc(m.atk, h.def, 1.0)); } });
           } else if (!busy) this.play(m, 'idle');
         }
