@@ -796,6 +796,8 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
             const m = h.target;
             this.time.delayedCall(330, () => {
               if (m.dead || h.dead) return;
+              const _miss = Math.min(0.3, Math.max(0.02, (m.dodge || 0) * 0.004 - (h.acc || 0) * 0.002));
+              if (Math.random() < _miss) { this.floatText(m, 'Né', '#9fd7ff'); return; }
               const crit = Math.random() < CRIT_RATE; let dmg = dmgCalc(h.atk, m.def, skillCoef(h.lv)); if (crit) dmg = Math.round(dmg * CRIT_MULT);
               this.vfx('hit', m); this.damage(m, dmg, crit);
             });
@@ -832,7 +834,10 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
           this.faceTo(m, h);
           if (time >= m.nextAtk && !busy) {
             m.nextAtk = time + 1400; this.play(m, 'basic', true);
-            this.time.delayedCall(380, () => { if (m.dead || h.dead) return; if (Math.hypot(h.c - m.c, h.r - m.r) < 1.6) this.damage(h, dmgCalc(m.atk, h.def, 1.0)); });
+            this.time.delayedCall(380, () => { if (m.dead || h.dead) return; if (Math.hypot(h.c - m.c, h.r - m.r) < 1.6) {
+                const _dg = Math.min(0.4, Math.max(0, (h.dodge || 0) * 0.003 - (m.acc || 0) * 0.002));
+                if (Math.random() < _dg) { this.floatText(h, 'Né', '#9fd7ff'); return; }
+                this.damage(h, dmgCalc(m.atk, h.def, 1.0)); } });
           } else if (!busy) this.play(m, 'idle');
         }
       } else if (m.state === 'return') {
