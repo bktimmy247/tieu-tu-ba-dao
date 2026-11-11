@@ -250,7 +250,7 @@ class Main extends Phaser.Scene {
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
-    this.load.image('map-full', 'assets/tex/map-full.jpg?v=' + (window.__KT_VER || 26));
+    for (const k of ['grass', 'dirt', 'stone']) this.load.image('g-' + k, 'assets/tex/ground-' + k + '.webp?v=' + (window.__KT_VER || 29));
     this.load.json('propdefs', 'assets/props.json');
     this.load.json('walkmask', 'assets/data/walkmask.json');
     this.load.image('arena', 'assets/arena.jpg');
@@ -322,8 +322,8 @@ class Main extends Phaser.Scene {
     const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 2, tex, plaza: { c: VILLAGE.c, r: VILLAGE.r, rad: 2.9 } });
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
     // TOÀN MAP = 1 ảnh liền đã keystone (nghiêng vào trong), phủ đúng 7168x3584 world px
-    if (this.textures.exists('map-full')) { const wW = N * TW, wH = N * TH;
-      this.plates = [this.add.image(0, wH / 2, 'map-full').setDisplaySize(wW, wH).setDepth(-9.9e5)]; }
+    // NỀN MỚI: 3 texture liền mép trộn theo địa hình, vẽ đúng độ phân giải gốc (js/terrain.js)
+    if (window.KTTerrain && this.textures.exists('g-grass')) { this.terrain = KTTerrain.init(this, { N, TW, TH, village: VILLAGE, spots: SPOTS, seed: (MAPCFG.seed || 7) }); }
     if (false)
     if (this.textures.exists('sec0')) { const COLS = 3, ROWS = 3;
       const W0 = (N * TW) / COLS, H0 = (N * TH) / ROWS, X0 = -N * TW / 2;
@@ -599,6 +599,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
   toggleOverview(force) {
     const on = force === undefined ? !this.overview : !!force;
     this.overview = on;
+    if (window.KTTerrain) KTTerrain.setOverview(on);
     const cam = this.cameras.main;
     if (on) {
       // zoom vua khit ca hinh thoi (truoc day fix 0.11 -> map chi chiem nua trai man hinh)
@@ -749,6 +750,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
   }
 
   update(time, deltaMs) {
+    if (window.KTTerrain && this.terrain) KTTerrain.update(this, this.overview);
     if (this.afkLock) return;
     this.cull(time);
     // dt theo GIỜ THỰC, không phụ thuộc nhịp khung hình của trình duyệt
