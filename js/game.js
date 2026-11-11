@@ -824,11 +824,17 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
         if (this.stepToward(m, m.home.c, m.home.r, 2.0, dt)) { m.state = 'idle'; m.hp = m.maxHp; m.provoked = false; }
       } else if (m.state === 'idle') {
         if (!busy) this.play(m, 'idle');
+        if (m.wait === undefined) m.wait = Math.random() * 10;   // lệch pha: không cả bãi cùng bước
         m.wait -= dt;
-        if (m.wait <= 0) { m.state = 'wander'; m.goal = { c: m.home.c + (Math.random() - 0.5) * 4, r: m.home.r + (Math.random() - 0.5) * 4 }; }
+        if (m.wait <= 0) { // ~10 giây mới nhích 2-3 bước (0,5-0,8 ô), không rời chỗ quá 2,5 ô
+          const a = Math.random() * Math.PI * 2, d = 0.5 + Math.random() * 0.3;
+          let gc = m.c + Math.cos(a) * d, gr = m.r + Math.sin(a) * d;
+          if (Math.hypot(gc - m.home.c, gr - m.home.r) > 2.5) { const k = d / Math.max(0.01, Math.hypot(m.home.c - m.c, m.home.r - m.r)); gc = m.c + (m.home.c - m.c) * k; gr = m.r + (m.home.r - m.r) * k; }
+          m.state = 'wander'; m.goal = { c: gc, r: gr }; m.wanderT = 0; }
       } else if (m.state === 'wander') {
         this.play(m, 'run');
-        if (this.stepToward(m, m.goal.c, m.goal.r, 0.7, dt)) { m.state = 'idle'; m.wait = 2 + Math.random() * 4; }
+        m.wanderT = (m.wanderT || 0) + dt;
+        if (this.stepToward(m, m.goal.c, m.goal.r, 0.45, dt) || m.wanderT > 3) { m.state = 'idle'; m.wait = 8 + Math.random() * 4; }
       }
       if (m.clip !== 'idle' && m.clip !== 'run' && !(m.spr.anims && m.spr.anims.isPlaying)) this.play(m, 'idle');
       this.place(m);

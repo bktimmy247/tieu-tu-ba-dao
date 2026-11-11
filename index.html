@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="utf-8">
@@ -9,7 +9,7 @@
   html,body{margin:0;height:100%;background:#0b0e13;overflow:hidden;font-family:"Segoe UI",Arial,sans-serif;user-select:none;-webkit-user-select:none}
   #game{position:fixed;inset:0}
   .panel{position:fixed;z-index:5;background:linear-gradient(#2c1c0c,#160e06);border:1px solid #a07a34;box-shadow:0 2px 8px #000a;color:#f0d79a}
-  /* khung nhân vật */
+  /* khung nhÃ¢n váº­t */
   #me{left:8px;top:8px;display:flex;gap:8px;padding:6px 10px 6px 6px;border-radius:10px}
   #me .ava{width:54px;height:54px;border-radius:50%;border:2px solid #d4a64a;background:#3a2a18 url(assets/lt/portrait-lang-van.webp) center/cover}
   #me .nm{font-size:13px;font-weight:700;color:#ffe6a8}
@@ -18,20 +18,20 @@
   .bar i{position:absolute;inset:0;width:100%;border-radius:6px}
   .bar span{position:absolute;inset:0;font-size:9px;line-height:11px;text-align:center;color:#fff;text-shadow:0 0 2px #000}
   #hp i{background:linear-gradient(#ff6a5a,#b0201a)} #mp i{background:linear-gradient(#5ab0ff,#1a4ab0)}
-  /* bản đồ nhỏ */
+  /* báº£n Ä‘á»“ nhá» */
   #mini{right:8px;top:8px;width:170px;padding:4px;border-radius:10px;text-align:center}
   #mini .area{font-size:12px;font-weight:700;color:#ffe6a8;margin:2px 0 4px}
   #mapbox{position:relative;width:170px;height:100px;overflow:hidden;border-radius:6px;background:#06080a}
   #mapbox canvas{position:absolute;left:50%;top:50%;width:112px;height:112px;margin:-56px 0 0 -56px;transform:scaleY(.6) rotate(45deg);image-rendering:pixelated}
   #mini .pos{font-size:10px;color:#c9b07a;margin-top:3px}
-  /* thanh kỹ năng */
+  /* thanh ká»¹ nÄƒng */
   #skills{left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:6px;padding:6px 8px;border-radius:12px}
   .sk{position:relative;width:52px;height:52px;border-radius:8px;border:1px solid #d4a64a;background:#1d140a center/cover;cursor:pointer;color:#fff;font-size:10px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
   .sk b{position:absolute;left:3px;top:1px;font-size:10px;color:#ffe6a8;text-shadow:0 0 2px #000}
   .sk em{position:relative;font-style:normal;padding:1px 3px;background:#000a;border-radius:3px;margin-bottom:2px}
   .sk .cd{position:absolute;left:0;right:0;bottom:0;height:0;background:#000b}
   .sk.on{box-shadow:0 0 10px #ffd36a;border-color:#ffd36a}
-  /* kinh nghiệm */
+  /* kinh nghiá»‡m */
   #exp{position:fixed;left:0;right:0;bottom:0;height:5px;background:#000;z-index:6}
   #exp i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a03a,#ffe08a)}
   #log{position:fixed;left:8px;bottom:14px;z-index:5;width:min(300px,40vw);font-size:11px;color:#e8d9b5;text-shadow:0 0 3px #000;pointer-events:none}
@@ -44,7 +44,7 @@
   @media (max-width:600px){#mini{width:120px}#mapbox{width:120px;height:80px}#mapbox canvas{width:90px;height:90px;margin:-45px 0 0 -45px}.bar{width:110px}.sk{width:46px;height:46px}#log{display:none}}
 .sk.lock{filter:grayscale(1) brightness(.55)}
 
-/* ---- điều khiển cảm ứng ---- */
+/* ---- Ä‘iá»u khiá»ƒn cáº£m á»©ng ---- */
 #touch{position:fixed;inset:auto 0 0 0;height:190px;pointer-events:none;z-index:12;display:none}
 #touch.on{display:block}
 #joy{position:absolute;left:18px;bottom:18px;width:132px;height:132px;border-radius:50%;
@@ -100,40 +100,40 @@
 </style>
 </head>
 <body>
-<div id="rot"><div class="ic">📱</div><div><b>Xoay ngang máy</b><br><span style="opacity:.75;font-size:13px">Game thiết kế cho màn hình ngang</span></div></div>
+<div id="rot"><div class="ic">ðŸ“±</div><div><b>Xoay ngang mÃ¡y</b><br><span style="opacity:.75;font-size:13px">Game thiáº¿t káº¿ cho mÃ n hÃ¬nh ngang</span></div></div>
 <div id="game"></div>
-<div id="me" class="panel"><div class="ava"></div><div><div class="nm">Lăng Vân</div><div class="lv" id="lv">Cấp 1</div>
+<div id="me" class="panel"><div class="ava"></div><div><div class="nm">LÄƒng VÃ¢n</div><div class="lv" id="lv">Cáº¥p 1</div>
   <div class="bar" id="hp"><i></i><span></span></div><div class="bar" id="mp"><i></i><span></span></div></div></div>
-<div id="mini" class="panel"><div class="area" id="area">Thôn Vân Sơn</div><div id="mapbox"><canvas id="mm" width="56" height="56"></canvas><canvas id="mmd" width="56" height="56"></canvas></div><div class="pos" id="pos"></div></div>
+<div id="mini" class="panel"><div class="area" id="area">ThÃ´n VÃ¢n SÆ¡n</div><div id="mapbox"><canvas id="mm" width="56" height="56"></canvas><canvas id="mmd" width="56" height="56"></canvas></div><div class="pos" id="pos"></div></div>
 <div id="ovBtn" title="Xem toan map (M)">&#9635;</div>
 <div id="skills" class="panel">
-  <div class="sk" id="skAuto" style="background-image:url(assets/lt/icon-basic.webp)" title="Tự đánh (A)"><b>A</b><em>Tự đánh</em></div>
-  <div class="sk" id="sk1" title="Tuyệt kỹ (1)" style="background-image:url(assets/lt/icon-ultimate.webp)"><b>1</b><em>Tuyệt kỹ</em><div class="cd"></div></div>
-  <div class="sk" id="skPot" title="Hồi máu (2)"><b>2</b><em>Hồi máu</em><div class="cd"></div></div>
+  <div class="sk" id="skAuto" style="background-image:url(assets/lt/icon-basic.webp)" title="Tá»± Ä‘Ã¡nh (A)"><b>A</b><em>Tá»± Ä‘Ã¡nh</em></div>
+  <div class="sk" id="sk1" title="Tuyá»‡t ká»¹ (1)" style="background-image:url(assets/lt/icon-ultimate.webp)"><b>1</b><em>Tuyá»‡t ká»¹</em><div class="cd"></div></div>
+  <div class="sk" id="skPot" title="Há»“i mÃ¡u (2)"><b>2</b><em>Há»“i mÃ¡u</em><div class="cd"></div></div>
 </div>
 <div id="fps" style="position:fixed;right:10px;top:6px;font:11px Segoe UI,Arial;color:#d9c79a;opacity:.85;z-index:60;pointer-events:none"></div>
 <div class="sk" id="mus" title="Bat/tat nhac"><b>M</b><em>Nhac</em></div>
 <div id="exp"><i></i></div>
 <div id="log"></div>
 <div id="toast"></div>
-<div id="start"><h1>TIÊU TỬ BÁ ĐẠO</h1><p>Chạm vào đất để đi · chạm vào quái để đánh<br>A: tự đánh · 1: tuyệt kỹ · 2: hồi máu</p><button id="go">Vào game</button></div>
+<div id="start"><h1>KIáº¾M THáº¾</h1><p>Cháº¡m vÃ o Ä‘áº¥t Ä‘á»ƒ Ä‘i Â· cháº¡m vÃ o quÃ¡i Ä‘á»ƒ Ä‘Ã¡nh<br>A: tá»± Ä‘Ã¡nh Â· 1: tuyá»‡t ká»¹ Â· 2: há»“i mÃ¡u</p><button id="go">VÃ o game</button></div>
 <div id="err" style="display:none;position:fixed;left:0;right:0;bottom:0;max-height:45%;overflow:auto;background:#5a0f0f;color:#ffd9d9;font:12px/1.35 Consolas,monospace;padding:8px 10px;z-index:9999;white-space:pre-wrap"></div>
 <script src="vendor/phaser.min.js"></script>
 <script src="js/ground.js"></script>
-<script src="js/terrain.js?v=29"></script>
-<script>window.__KT_VER=29;</script>
-<script src="js/loot.js?v=29"></script>
-<script src="js/story.js?v=29"></script>
-<script src="js/afk-battle.js?v=29"></script>
-<script src="js/game.js?v=29"></script>
+<script src="js/terrain.js?v=30"></script>
+<script>window.__KT_VER=30;</script>
+<script src="js/loot.js?v=30"></script>
+<script src="js/story.js?v=30"></script>
+<script src="js/afk-battle.js?v=30"></script>
+<script src="js/game.js?v=30"></script>
 
 <div id="touch" style="display:none">
   <div id="joy"><i></i></div>
   <div id="cds">
-    <div class="c" id="c1"><b>1</b><s></s><em>Tuyệt</em></div>
-    <div class="c" id="c2"><b>2</b><s></s><em>Hồi</em></div>
+    <div class="c" id="c1"><b>1</b><s></s><em>Tuyá»‡t</em></div>
+    <div class="c" id="c2"><b>2</b><s></s><em>Há»“i</em></div>
   </div>
-  <button id="atk">ĐÁNH</button>
+  <button id="atk">ÄÃNH</button>
 </div>
 
 </body>
