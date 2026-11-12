@@ -26,6 +26,30 @@
   KTFeel.install = function (sc) {
     if (sc.__feel) return; sc.__feel = true;
 
+    /* iOS: khi âm thanh còn khoá, Phaser xếp mọi lệnh play/stop vào lockedActionsQueue.
+       Nếu một sound bị destroy mà entry của nó còn trong queue, lần chạm đầu tiên iOS sẽ
+       replay lệnh đó -> sound.manager = null -> crash "null is not an object (isLocked)".
+       Lọc bỏ entry của sound đã destroy trước mỗi lần unlock. */
+    try {
+      const P = window.Phaser && Phaser.Sound && Phaser.Sound.HTML5AudioSoundManager && Phaser.Sound.HTML5AudioSoundManager.prototype;
+      if (P && P.unlock && !P.__ktGuard) {
+        const ou = P.unlock;
+        P.unlock = function () {
+          try { if (Array.isArray(this.lockedActionsQueue)) this.lockedActionsQueue = this.lockedActionsQueue.filter(a => a && a.sound && a.sound.manager); } catch (e) { }
+          return ou.apply(this, arguments);
+        };
+        P.__ktGuard = true;
+      }
+      // Mọi method của HTML5AudioSound đều gọi this.manager.isLocked(); sound đã destroy có manager = null.
+      const H = window.Phaser && Phaser.Sound && Phaser.Sound.HTML5AudioSound && Phaser.Sound.HTML5AudioSound.prototype;
+      if (H) for (const fn of ['play', 'pause', 'resume', 'stop', 'setVolume', 'setRate', 'setDetune', 'setLoop', 'setMute', 'seek', 'update']) {
+        if (typeof H[fn] !== 'function' || H[fn].__ktGuard) continue;
+        const orig = H[fn];
+        H[fn] = function () { if (!this.manager) return false; return orig.apply(this, arguments); };
+        H[fn].__ktGuard = true;
+      }
+    } catch (e) { }
+
     /* ---------- nhạc nền 2 track, fade theo dt ---------- */
     const tracks = sc.bgmTracks = {};
     for (const z in TRACK) {
@@ -33,8 +57,13 @@
       try { snd = sc.sound.add(TRACK[z], { loop: true, volume: 0 }); } catch (e) { snd = null; }
       tracks[z] = { key: TRACK[z], snd, cur: 0 };
     }
-    // game.js đã tạo 1 track đơn — tắt để không phát chồng
-    if (sc.music) { try { sc.music.stop(); sc.music.destroy(); } catch (e) { } sc.music = null; }
+    // game.js đã tạo 1 track đơn — bỏ hẳn (không stop trước khi destroy, tránh vào lockedActionsQueue)
+    if (sc.music) {
+      const sm = sc.sound, m = sc.music;
+      try { if (sm && Array.isArray(sm.lockedActionsQueue)) sm.lockedActionsQueue = sm.lockedActionsQueue.filter(a => a && a.sound !== m); } catch (e) { }
+      try { m.destroy(); } catch (e) { }
+      sc.music = null;
+    }
     sc.bgmZone = 'village';                  // 'village' | 'field'
     sc.bgmKey = TRACK.village;               // key đang phát (để kiểm chứng)
     sc.audioUnlocked = false;

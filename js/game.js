@@ -283,9 +283,9 @@ class Main extends Phaser.Scene {
 
   makeAnims() {
     for (const [cid, ch] of Object.entries(this.M.chars)) for (const [cl, c] of Object.entries(ch.clips))
-      { const hk = 'hdx:' + cid + ':' + cl; const src = (this.textures.exists(hk) && this.textures.get(hk).frameTotal > 1) ? hk : ((this.textures.exists(cid + ':' + cl) && this.textures.get(cid + ':' + cl).frameTotal > 1) ? cid + ':' + cl : null); if (src) this.anims.create({ key: cid + ':' + cl, frames: this.anims.generateFrameNumbers(src, { start: 0, end: c.frames - 1 }), frameRate: (cl === 'run' ? 0.75 : 1) * 1000 / c.ms, repeat: (cl === 'idle' || cl === 'run') ? -1 : 0 }); }
+      { const hk = 'hdx:' + cid + ':' + cl; const src = (this.textures.exists(hk) && this.textures.get(hk).frameTotal > 1) ? hk : ((this.textures.exists(cid + ':' + cl) && this.textures.get(cid + ':' + cl).frameTotal > 1) ? cid + ':' + cl : null); if (src) { const tx = this.textures.get(src); const total = tx.frameTotal - (tx.has('__BASE') ? 1 : 0); const end = Math.min(c.frames - 1, total - 1); this.anims.create({ key: cid + ':' + cl, frames: this.anims.generateFrameNumbers(src, { start: 0, end }), frameRate: (cl === 'run' ? 0.75 : 1) * 1000 / c.ms, repeat: (cl === 'idle' || cl === 'run') ? -1 : 0 }); } }
     for (const [k, v] of Object.entries(this.M.vfx))
-      if (this.textures.exists('vfx:' + k) && this.textures.get('vfx:' + k).frameTotal > 1) this.anims.create({ key: 'vfx:' + k, frames: this.anims.generateFrameNumbers('vfx:' + k, { start: 0, end: v.frames - 1 }), frameRate: 1000 / v.ms, repeat: 0 });
+      if (this.textures.exists('vfx:' + k) && this.textures.get('vfx:' + k).frameTotal > 1) { const txv = this.textures.get('vfx:' + k); const tv = txv.frameTotal - (txv.has('__BASE') ? 1 : 0); this.anims.create({ key: 'vfx:' + k, frames: this.anims.generateFrameNumbers('vfx:' + k, { start: 0, end: Math.min(v.frames - 1, tv - 1) }), frameRate: 1000 / v.ms, repeat: 0 }); }
   }
 
   create() {
@@ -769,7 +769,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       HUD.log('Máy yếu: đã tắt bóng đổ và hiệu ứng để chạy mượt hơn');
     }
     const el = document.getElementById('area');
-    if (el) el.textContent = VILLAGE.name + ' · ' + Math.round(this.game.loop.actualFps) + ' fps';
+    if (el) el.textContent = VILLAGE.name;   // fps da co o #fps, khong lap vao ten vung
     const el2 = document.getElementById('fps');
     if (el2) el2.textContent = Math.round(this.game.loop.actualFps) + ' fps · ' + vis + '/' + this.props.length;
   }
