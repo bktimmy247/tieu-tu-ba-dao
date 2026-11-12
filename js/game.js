@@ -248,7 +248,10 @@ class Main extends Phaser.Scene {
     this.load.spritesheet('tiles', 'assets/tiles/terrain-base.png', { frameWidth: 128, frameHeight: 64 });
     for (const p of ['pine', 'oak', 'sakura', 'rock', 'bush', 'lantern', 'grass', 'bamboo', 'willow', 'bamboo-hedge', 'bamboo-clump', 'bamboo-strip', 'bamboo-far', 'bridge', 'shrine', 'paddy', 'hut', 'cart',
       'house-a', 'house-b', 'house-c', 'house-d', 'house-e', 'house-f', 'gate', 'flag', 'drum', 'well']) this.load.image(p, (p.startsWith('house-') ? 'assets/props2/' : 'assets/props3/') + p + '.webp?v=' + (window.__KT_VER || 26));
-    for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png'); for (const [cl, c] of Object.entries(ch.clips)) { this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); this.load.spritesheet('hdx:' + cid + ':' + cl, HDLT + c.file, { frameWidth: c.w * 2, frameHeight: c.h * 2 }); } }
+    /* HD (2x) chỉ nạp cho các clip nhìn lâu: idle/run/basic. Clip combat ngắn dùng SD —
+       tiết kiệm ~35 MB VRAM, quan trọng với iPhone/Safari (giới hạn bộ nhớ tab). */
+    const HD_CLIPS = { idle: 1, run: 1, basic: 1 };
+    for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png'); for (const [cl, c] of Object.entries(ch.clips)) { this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); if (HD_CLIPS[cl]) this.load.spritesheet('hdx:' + cid + ':' + cl, HDLT + c.file, { frameWidth: c.w * 2, frameHeight: c.h * 2 }); } }
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
@@ -459,11 +462,14 @@ class Main extends Phaser.Scene {
     cam.setZoom(camZoomFor(innerWidth, innerHeight));
     cam.setBackgroundColor('#0d1408');
     // LỚP KHÔNG KHÍ: vignette tối bốn mép + sương mờ phía xa
+    /* vignette sinh Ở 512px rồi phóng to khi vẽ: gradient mềm nên mắt không phân biệt,
+       nhưng VRAM giảm từ ~10,6 MB (1664x1664) xuống ~1 MB. */
     { const g = this.make.graphics({ x: 0, y: 0, add: false });
-      const R0 = Math.max(innerWidth, innerHeight);
+      const R0 = 512;
       for (let i = 0; i < 26; i++) { const t = i / 26; g.fillStyle(0x0a1208, t * 0.055); g.fillCircle(R0 * 0.62, R0 * 0.62, R0 * (0.74 - t * 0.46)); }
-      g.generateTexture('vig', Math.round(R0 * 1.3), Math.round(R0 * 1.3)); g.destroy();
-      const vig = this.add.image(innerWidth / 2, innerHeight / 2, 'vig').setScrollFactor(0).setDepth(9e5).setAlpha(0.55);
+      g.generateTexture('vig', R0, R0); g.destroy();
+      const vig = this.add.image(innerWidth / 2, innerHeight / 2, 'vig').setScrollFactor(0).setDepth(9e5).setAlpha(0.55)
+        .setDisplaySize(innerWidth * 1.15, innerHeight * 1.15);
       // sương mù phía xa: gradient mềm (bỏ rectangle phẳng -> hết hình chữ nhật mờ có cạnh cứng)
       const cvF = document.createElement('canvas'); cvF.width = 8; cvF.height = 256;
       const cf = cvF.getContext('2d'); const grF = cf.createLinearGradient(0, 0, 0, 256);
