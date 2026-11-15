@@ -75,7 +75,7 @@
     { const R = 3.3 * K;
       for (let dy = -R * 1.2; dy <= R * 1.2; dy++) for (let dx = -R * 1.2; dx <= R * 1.2; dx++) {
         const u = village.c * K + dx, v = village.r * K + dy; if (u < 0 || v < 0 || u >= W || v >= W) continue;
-        const sq = Math.max(Math.abs(dx), Math.abs(dy)) / R, rd = Math.hypot(dx, dy) / R; const d = 0.55 * sq + 0.45 * rd + (n2(u / K * 40 / N, v / K * 40 / N) - 0.5) * 0.3;
+        const sq = Math.max(Math.abs(dx), Math.abs(dy)) / R, rd = Math.hypot(dx, dy) / R; const d = 0.90 * sq + 0.10 * rd + (n2(u / K * 40 / N, v / K * 40 / N) - 0.5) * 0.08;
         if (d < 1) stone[at(u, v)] = 1; } }
     // tông màu lớn: mảng cỏ đậm/nhạt
     for (let v = 0; v < W; v++) for (let u = 0; u < W; u++) tone[v * W + u] = 0.65 * n1(u / K * 14 / N, v / K * 14 / N) + 0.35 * n2(u / K * 40 / N, v / K * 40 / N);
@@ -140,13 +140,19 @@
       const t0 = performance.now();
       const m = buildMasks(N, village, spots, seed || 7);
       const pat = {}, ctx0 = document.createElement('canvas').getContext('2d');
-      for (const k of ['grass', 'dirt', 'stone']) pat[k] = ctx0.createPattern(scene.textures.get('g-' + k).getSourceImage(), 'repeat');
+      for (const k of ['grass', 'dirt', 'stone']) {
+        pat[k] = ctx0.createPattern(scene.textures.get('g-' + k).getSourceImage(), 'repeat');
+        // Texture mặt đất phải cùng phép chiếu với map: hai trục chéo ±26.565°.
+        // Chỉ chiếu CHẤT LIỆU, không ép camera/sprite/UI. Anchor toàn world tránh seam giữa chunk.
+        const a = Math.SQRT1_2;
+        pat[k].setTransform(new DOMMatrix([a, a * TH / TW, -a, a * TH / TW, 0, 0]));
+      }
       const edge = makeEdge(N);
       // edge canvas đặt lệch -pad ô -> bọc vào canvas có gốc trùng mask bằng cách vẽ với offset
       const edgeCv = document.createElement('canvas'); edgeCv.width = edge.cv.width; edgeCv.height = edge.cv.height;
       edgeCv.getContext('2d').drawImage(edge.cv, 0, 0);
       let tmpCv = null;
-      const T = this.T = { N, TW, TH, m, pat, scene, chunks: new Map(), stat: { built: 0, ms: 0 },
+      const T = this.T = { N, TW, TH, village, m, pat, scene, chunks: new Map(), stat: { built: 0, ms: 0 },
         tmp: (w, h) => { if (!tmpCv || tmpCv.width !== w || tmpCv.height !== h) { tmpCv = document.createElement('canvas'); tmpCv.width = w; tmpCv.height = h; } return tmpCv; },
         edge: { width: 0 } };
       // edge cần lệch -pad ô: tạo canvas phụ có gốc ô(0,0) bằng drawImage âm
@@ -180,6 +186,19 @@
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(t, 0, 0); ctx.restore(); };
       layer(T.m.dirt, T.pat.dirt);
       layer(T.m.stone, T.pat.stone);
+      // Viền quảng trường và mạch đá đi đúng hai trục iso, không vẽ ô vuông theo màn hình.
+      ctx.save(); ctx.setTransform(s, 0, 0, s, -s * ox, -s * oy);
+      const v = T.village, project = (c,r) => [(c-r)*T.TW/2,(c+r)*T.TH/2];
+      const corners = [[v.c-3,v.r-3],[v.c+3,v.r-3],[v.c+3,v.r+3],[v.c-3,v.r+3]].map(p=>project(...p));
+      ctx.beginPath(); corners.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p)); ctx.closePath();
+      ctx.strokeStyle='rgba(105,91,66,0.36)';ctx.lineWidth=5;ctx.stroke();
+      ctx.clip();ctx.strokeStyle='rgba(38,34,29,0.20)';ctx.lineWidth=1.1;
+      for(let q=-6;q<=6;q++) for(const axis of [0,1]) {
+        const a=axis?project(v.c-4,v.r+q*.5):project(v.c+q*.5,v.r-4);
+        const b=axis?project(v.c+4,v.r+q*.5):project(v.c+q*.5,v.r+4);
+        ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
+      }
+      ctx.restore();
       T.drawEdge(ctx, s, ox, oy);
     },
     // gọi mỗi frame: dựng khối gần camera, tối đa 1 khối/frame (2 khi mới vào)
