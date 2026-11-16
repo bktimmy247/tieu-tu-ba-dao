@@ -46,13 +46,13 @@
       if (map.obj[r][c] || map.block[r][c]) return false;
       const k = map.t[r][c];
       if (G.PATH.includes(k) || k === G.WOOD || G.WATER.includes(k)) return false;
-      if (Math.hypot(c - village.c, r - village.r) < 9) return false;
+      if (Math.hypot(c - village.c, r - village.r) < 5) return false;
       if ((spots || []).some(s => Math.hypot(c - s.c, r - s.r) < 4.5)) return false;
       return true;
     };
     // rải theo BÃI (nhóm lớn), không rải đều — giống tranh tham chiếu
     let tries = 0;
-    while (clumps.length < 90 && tries++ < 4000) {
+    while (clumps.length < 170 && tries++ < 4000) {
       const c0 = 3 + R() * (N - 6), r0 = 3 + R() * (N - 6);
       if (!ok(c0 | 0, r0 | 0)) continue;
       const n = 4 + ((R() * 6) | 0);
