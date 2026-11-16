@@ -11,6 +11,17 @@
       idle: ['Nồi phở này từng giữ Ấn Phố đấy, cháu ạ.', 'Ăn bát phở rồi hẵng đi, đường còn dài.'] },
     mo: { name: 'Thầy Mo', img: 'npc-mo', bust: 'assets/lt/bust-mo.webp', dc: -2.4, dr: 1.6,
       idle: ['Tàn Ảnh sợ tiếng chuông và nước sạch.', 'Ấn mà vỡ hết, người sẽ quên cả tên mình.'] },
+    // NPC trước cửa từng cửa hàng (cửa nhà quay xuống-phải = hướng +c)
+    thuoc: { name: 'Đại Phu Lý · Tiệm Thuốc', img: 'npc2-thuoc', bust: 'assets/lt/bust-mo.webp', dc: -2.6, dr: 2.9,
+      idle: ['Thuốc hồi máu đây, đi săn nhớ mang theo.', 'Vết thương Tàn Ảnh để lâu sẽ lạnh tới xương.'] },
+    ren: { name: 'Thợ Rèn Trương · Lò Rèn', img: 'npc2-ren', bust: 'assets/lt/bust-pho.webp', dc: -2.6, dr: -1.8,
+      idle: ['Mang quặng về đây, ta rèn cho cây giáo bén hơn.', 'Vũ khí tốt cứu mạng hơn võ công giỏi.'] },
+    truong: { name: 'Trưởng Thôn', img: 'npc2-truong', bust: 'assets/lt/bust-pho.webp', dc: 1.6, dr: -2.6,
+      idle: ['Thôn Vân Sơn nhỏ nhưng chưa từng để khách đói.', 'Quái ngoài đồng mỗi ngày một đông, cháu cẩn thận.'] },
+    taphoa: { name: 'Bà Tư · Tạp Hóa', img: 'npc2-taphoa', bust: 'assets/lt/bust-pho.webp', dc: 4.6, dr: 2.9,
+      idle: ['Gạo, muối, dây thừng — gì cũng có.', 'Mua nhiều bà bớt cho.'] },
+    tuu: { name: 'Chưởng Quầy · Tửu Lầu', img: 'npc2-tuu', bust: 'assets/lt/bust-pho.webp', dc: 3.2, dr: -1.4,
+      idle: ['Rượu ngon, chuyện giang hồ còn ngon hơn.', 'Lên lầu nghe hát không khách quan?'] },
   };
 
   const NARRATOR = { name: 'Lời dẫn', bust: null };
@@ -81,8 +92,17 @@
     /* ---------- NPC ---------- */
     sc.npcs = [];
     for (const [id, n] of Object.entries(MAP_ID === 1 ? NPCS : {})) {
-      const c = VILLAGE.c + n.dc, r = VILLAGE.r + n.dr, x = isoX(c, r), y = isoY(c, r);
-      const s = sc.add.image(x, y, n.img).setOrigin(0.5, 0.96).setDepth(y + 1).setScale(id === 'mo' ? 0.82 : 0.9);
+      let c = VILLAGE.c + n.dc, r = VILLAGE.r + n.dr;
+      // NPC phải đứng chỗ đi tới được: tìm ô trống gần nhất mà điểm nói chuyện (c+0.7, r+0.7) cũng trống
+      if (sc.obs && sc.obs.solid) {
+        const free = (a, b) => !sc.obs.solid(a, b) && !sc.obs.solid(a + 0.7, b + 0.7);
+        if (!free(c, r)) { let best = null, bd = 9;
+          for (let dc = -2; dc <= 2; dc += 0.25) for (let dr = -2; dr <= 2; dr += 0.25) {
+            const d = Math.hypot(dc, dr); if (d < bd && free(c + dc, r + dr)) { bd = d; best = [c + dc, r + dr]; } }
+          if (best) [c, r] = best; }
+      }
+      const x = isoX(c, r), y = isoY(c, r);
+      const s = sc.add.image(x, y, n.img).setOrigin(0.5, 0.96).setDepth(y + 1).setScale(id === 'mo' ? 0.82 : (n.img.startsWith('npc2-') ? 0.62 : 0.9));
       sc.add.image(x + 4, y + 2, 'shadow').setScale(0.6, 0.5).setDepth(-7.5e5);
       const lb = sc.add.text(x, y - s.displayHeight - 4, n.name, { font: 'bold 12px Segoe UI', color: '#9fe0ff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5, 1).setDepth(1e6);
       const mk = sc.add.text(x, y - s.displayHeight - 20, '!', { font: 'bold 26px Segoe UI', color: '#ffd23a', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5, 1).setDepth(1e6).setVisible(false);

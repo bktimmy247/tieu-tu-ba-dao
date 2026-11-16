@@ -72,7 +72,7 @@
         const w = Math.max(0, 1 - d * (0.75 + 0.6 * nz)) * 1.55 * (0.5 + 0.6 * n1(u / K * 14 / N, v / K * 14 / N));
         const i = at(u, v); dirt[i] = Math.max(dirt[i], Math.min(1, w)); } }
     // quảng trường đá lát quanh làng
-    { const R = 3.3 * K;
+    { const R = 5.6 * K;   // phố làng rộng hơn: bao các cửa hàng
       for (let dy = -R * 1.2; dy <= R * 1.2; dy++) for (let dx = -R * 1.2; dx <= R * 1.2; dx++) {
         const u = village.c * K + dx, v = village.r * K + dy; if (u < 0 || v < 0 || u >= W || v >= W) continue;
         const sq = Math.max(Math.abs(dx), Math.abs(dy)) / R, rd = Math.hypot(dx, dy) / R; const d = 0.90 * sq + 0.10 * rd + (n2(u / K * 40 / N, v / K * 40 / N) - 0.5) * 0.08;
@@ -189,13 +189,13 @@
       // Viền quảng trường và mạch đá đi đúng hai trục iso, không vẽ ô vuông theo màn hình.
       ctx.save(); ctx.setTransform(s, 0, 0, s, -s * ox, -s * oy);
       const v = T.village, project = (c,r) => [(c-r)*T.TW/2,(c+r)*T.TH/2];
-      const corners = [[v.c-3,v.r-3],[v.c+3,v.r-3],[v.c+3,v.r+3],[v.c-3,v.r+3]].map(p=>project(...p));
+      const corners = [[v.c-6,v.r-6],[v.c+6,v.r-6],[v.c+6,v.r+6],[v.c-6,v.r+6]].map(p=>project(...p));
       ctx.beginPath(); corners.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p)); ctx.closePath();
       ctx.strokeStyle='rgba(105,91,66,0.36)';ctx.lineWidth=5;ctx.stroke();
       ctx.clip();ctx.strokeStyle='rgba(38,34,29,0.20)';ctx.lineWidth=1.1;
-      for(let q=-6;q<=6;q++) for(const axis of [0,1]) {
-        const a=axis?project(v.c-4,v.r+q*.5):project(v.c+q*.5,v.r-4);
-        const b=axis?project(v.c+4,v.r+q*.5):project(v.c+q*.5,v.r+4);
+      for(let q=-12;q<=12;q++) for(const axis of [0,1]) {
+        const a=axis?project(v.c-7,v.r+q*.5):project(v.c+q*.5,v.r-7);
+        const b=axis?project(v.c+7,v.r+q*.5):project(v.c+q*.5,v.r+7);
         ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
       }
       ctx.restore();

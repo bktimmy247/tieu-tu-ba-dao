@@ -49,6 +49,9 @@ const SPOTS = [
 ];
 window.SPOTS = SPOTS;   // cho quests.js đọc bãi quái
 window.VILLAGE = VILLAGE;   // cho feel.js biet moc vung lang
+// công trình làng: ảnh lưu 1.5x, bán kính chặn (ô) theo móng nhà
+const VILLAGE_ART = ['v-chief', 'v-tavern', 'v-forge', 'v-medicine', 'v-store', 'v-houseA', 'v-houseB', 'v-well'];
+const VILLAGE_RAD = { 'v-chief': 1.5, 'v-tavern': 1.6, 'v-forge': 1.3, 'v-medicine': 1.25, 'v-store': 1.25, 'v-houseA': 1.1, 'v-houseB': 1.1, 'v-well': 0.55 };
 
 const MAPS = {
   1: { seed: 20261108, bgm: 'bgm-field' },
@@ -259,6 +262,8 @@ class Main extends Phaser.Scene {
     // vật thể khai báo trong props.json có 'file' riêng (deco-*) trước đây KHÔNG được nạp -> 418 ô __MISSING đen
     { const PD = this.cache.json.get('propdefs') || {};
       for (const [k, d] of Object.entries(PD)) if (d && d.file && !this.textures.exists(k)) this.load.image(k, d.file + '?v=' + (window.__KT_VER || 13)); }
+    for (const k of VILLAGE_ART) this.load.image(k, 'assets/village/' + k + '.webp?v=' + (window.__KT_VER || 26));
+    for (const k of ['npc2-thuoc', 'npc2-ren', 'npc2-truong', 'npc2-taphoa', 'npc2-tuu']) this.load.image(k, LT + k + '.webp');
     for (let i = 0; i < 3; i++) this.load.image('reed-art' + i, 'assets/reeds/reed' + i + '.webp?v=59');
     this.load.json('walkmask', 'assets/data/walkmask.json');
     this.load.image('arena', 'assets/arena.jpg');
@@ -310,16 +315,20 @@ class Main extends Phaser.Scene {
       const R2 = rng(MAPCFG.seed + 77), CL = [];
       for (let i = 0; i < 12; i++) CL.push([6 + R2() * (N - 12), 6 + R2() * (N - 12)]);
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
-        const p = map.obj[r][c]; if (!p || /^(gate|flag|drum|well|shrine|cart|hut|bridge|house-)/.test(p)) continue;
+        const p = map.obj[r][c]; if (!p || /^(gate|flag|drum|well|shrine|cart|hut|bridge|house-|v-)/.test(p)) continue;
         const inC = CL.some(q => Math.hypot(q[0] - c, q[1] - r) < 4.5);
         if (!inC && R2() > 0.4) { map.obj[r][c] = null; map.block[r][c] = false; } } }
     // công trình thôn quanh quảng trường (đặt tay, không ngẫu nhiên)
-    const STRUCTS = [['gate', 10, 14], ['flag', 9, 8], ['drum', 12, 9], ['well', 8, 12], ['shrine', 7, 7], ['cart', 13, 12], ['hut', 6, 13], ['bridge', 11, 6]];
+    // LÀNG kiểu Kiếm Thế: phố đầy đủ nhà cửa/cửa hàng/NPC (assets/village, vẽ isometric 2:1)
+    const STRUCTS = [['gate', 10, 16], ['flag', 9, 8], ['drum', 12, 9],
+      ['v-chief', 10, 5], ['v-tavern', 14, 7], ['v-forge', 6, 7], ['v-medicine', 6, 12], ['v-store', 14, 12],
+      ['v-houseA', 16, 9], ['v-houseB', 4, 9], ['v-well', 8, 10]];
     for (const [k, c, r] of STRUCTS) if (c > 0 && r > 0 && c < N && r < N) { map.obj[r][c] = k; map.block[r][c] = true; }
+    window.KTGround.RAD_OVERRIDE = Object.assign(window.KTGround.RAD_OVERRIDE || {}, VILLAGE_RAD);
     // tranh làng đã có nhà/cây sẵn: xoá vật thể trùng trong bán kính 8 ô (giữ vài món điểm nhấn)
-    { const KEEP = /^(well|drum|gate|flag|lantern|shrine)$/;
+    { const KEEP = /^(well|drum|gate|flag|lantern|shrine|v-.*)$/;
       for (let r2 = 0; r2 < N; r2++) for (let c2 = 0; c2 < N; c2++) { const q = map.obj[r2][c2]; if (!q || KEEP.test(q)) continue;
-        if (Math.hypot(c2 - VILLAGE.c, r2 - VILLAGE.r) < 8) { map.obj[r2][c2] = null; map.block[r2][c2] = false; } } }
+        if (Math.hypot(c2 - VILLAGE.c, r2 - VILLAGE.r) < 9) { map.obj[r2][c2] = null; map.block[r2][c2] = false; } } }
     // VIỀN CẢNH: vành đá chạy quanh biên để mép map không bị cắt cụt
     for (let i = 1; i < N - 1; i++) for (const [r, c] of [[1, i], [N - 2, i], [i, 1], [i, N - 2]]) {
       if (!map.obj[r][c] && (i % 3 !== 0)) { map.obj[r][c] = 'rock'; map.block[r][c] = true; } }
@@ -349,7 +358,7 @@ class Main extends Phaser.Scene {
     this.propTrim = { cutMask: 0, cutNear: 0, cutRock: 0 };
     { const wmP = this.cache.json.get('walkmask');
       if (wmP && wmP.w) {
-        const KEEP = /^(gate|flag|drum|well|lantern|shrine|cart|hut|bridge|house-)/;   // công trình đặt tay: giữ
+        const KEEP = /^(gate|flag|drum|well|lantern|shrine|cart|hut|bridge|house-|v-)/;   // công trình đặt tay: giữ
         const kept = [];
         for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) {
           const p = map.obj[r][c]; if (!p) continue;
@@ -439,10 +448,13 @@ class Main extends Phaser.Scene {
     let nObj = 0;
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
       const p = map.obj[r][c]; if (!p) continue;
-      const x = isoX(c, r) + (hash(c, r, 9) - 0.5) * 18, y = isoY(c, r) + (hash(c, r, 11) - 0.5) * 8;
-      const s = this.add.image(x, y + 6, p).setOrigin(0.5, OH[p]).setDepth(y + 6);
-      s.setScale(0.72 + hash(c, r, 13) * 0.2); if (hash(c, r, 17) < 0.5) s.setFlipX(true);
-      this.props.push({ s, sh: this.add.image(x + 10, y + 2, 'shadow').setScale(SH[p], SH[p] * 0.9).setDepth(-8e5), c, r });
+      const isV = p.startsWith('v-');
+      const x = isoX(c, r) + (isV ? 0 : (hash(c, r, 9) - 0.5) * 18), y = isoY(c, r) + (isV ? 0 : (hash(c, r, 11) - 0.5) * 8);
+      const s = this.add.image(x, y + 6, p).setOrigin(0.5, isV ? 0.86 : OH[p]).setDepth(y + 6);
+      if (isV) s.setScale(1 / 1.5);   // ảnh làng giữ góc chéo: không lật, không co ngẫu nhiên
+      else { s.setScale(0.72 + hash(c, r, 13) * 0.2); if (hash(c, r, 17) < 0.5) s.setFlipX(true); }
+      const shs = isV ? (VILLAGE_RAD[p] || 1) * 2.2 : SH[p];
+      this.props.push({ s, sh: this.add.image(x + (isV ? 0 : 10), y + 2, 'shadow').setScale(shs, shs * 0.9).setAlpha(isV ? 0.55 : 1).setDepth(-8e5), c, r });
       nObj++;
     }
     if (window.KTReeds) { try { KTReeds.init(this, { map, G, N, isoX, isoY, village: VILLAGE, spots: SPOTS, seed: MAPCFG.seed }); } catch (e) { console.error('reeds', e); } }

@@ -46,7 +46,7 @@
       if (map.obj[r][c] || map.block[r][c]) return false;
       const k = map.t[r][c];
       if (G.PATH.includes(k) || k === G.WOOD || G.WATER.includes(k)) return false;
-      if (Math.hypot(c - village.c, r - village.r) < 5) return false;
+      if (Math.hypot(c - village.c, r - village.r) < 9) return false;
       if ((spots || []).some(s => Math.hypot(c - s.c, r - s.r) < 4.5)) return false;
       return true;
     };
