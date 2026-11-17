@@ -292,5 +292,17 @@
   "shadow": 0.0,
   "rad": 0.0,
   "deco": true
+ },
+ "v-bridge": {
+  "file": "assets/village/v-bridge.webp",
+  "anchor": 0.94,
+  "shadow": 0.45,
+  "rad": 0.0
+ },
+ "v-fish": {
+  "file": "assets/village/v-fish.webp",
+  "anchor": 0.5,
+  "shadow": 0.0,
+  "rad": 0.0
  }
 }

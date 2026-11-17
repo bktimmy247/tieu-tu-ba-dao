@@ -4,7 +4,23 @@
  * Nhân vật + quái + VFX + âm thanh lấy từ Lục Thần (assets/lt, đóng gói bằng tools/pack_lucthan.py).
  */
 'use strict';
-const TW = 128, TH = 64, N = 56;
+// ---- MỖI MAP MỘT FILE (kiểu TIÊU TỬ BÁ ĐẠO): maps/<id>/map.json. Game chỉ biết ID map đang đứng (lưu trong save).
+const START_MAP = 'thon-van-son';
+const LEGACY_MAP = { 0: 'thon-van-son', 1: 'dong-van-son', 2: 'rung-the' };
+function loadMapSync(id) {
+  const x = new XMLHttpRequest(); x.open('GET', 'maps/' + id + '/map.json?v=' + (window.__KT_VER || 1), false); x.send(null);
+  if (x.status !== 200 && x.status !== 0) throw new Error('Không tải được map ' + id + ' (' + x.status + ')');
+  return JSON.parse(x.responseText);
+}
+const MAP_ID = (() => { try {
+  const d = JSON.parse(localStorage.getItem('ttbd-save-v1') || 'null');
+  if (!d) return START_MAP;                                        // game mới: bắt đầu trong thôn
+  if (typeof d.map === 'string') return d.map;
+  if (!d.mv && d.map !== 2) return START_MAP;                      // save cũ (thôn nằm chung map 1) -> về thôn
+  return LEGACY_MAP[d.map] || START_MAP; } catch (e) { return START_MAP; } })();
+let MAPDEF; try { MAPDEF = loadMapSync(MAP_ID); } catch (e) { MAPDEF = loadMapSync(START_MAP); }
+const TW = 128, TH = 64, N = MAPDEF.size || 56;
+window.MAPDEF = MAPDEF; window.N = N;
 
 /* Bắt lỗi hiện lên màn hình để người chơi chụp gửi lại (máy khác không xem được console) */
 window.__errs = [];
@@ -34,41 +50,19 @@ function vnoise(x, y, s) {
 const fbm = (x, y, s) => (vnoise(x, y, s) * 0.6 + vnoise(x * 2.1, y * 2.1, s + 7) * 0.3 + vnoise(x * 4.3, y * 4.3, s + 13) * 0.1);
 
 /* ---------------- Sinh map ---------------- */
-const VILLAGE = { c: 10, r: 10, name: 'Thôn Vân Sơn' };
-// 9 bãi quái, mỗi bãi ~20 con (map 56x56). Lv tăng dần theo khoảng cách từ làng.
-const SPOTS = [
-  { c: 17, r: 27, char: 'tinh-mac',   name: 'Tịnh Mặc',   lv: 1,  n: 15, aggro: false, area: 'Bãi Tịnh Mặc',    tint: 0xffffff },
-  { c: 28, r: 14, char: 'tinh-mac',   name: 'Tịnh Mặc',   lv: 3,  n: 15, aggro: false, area: 'Đồng Tịnh Mặc',   tint: 0xffffff },
-  { c: 35, r: 19, char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 5,  n: 15, aggro: true,  area: 'Rừng Lăng Tiêu',  tint: 0xffffff },
-  { c: 20, r: 40, char: 'lang-nguyet',name: 'Lăng Nguyệt',lv: 7,  n: 15, aggro: true,  area: 'Bờ Lăng Nguyệt',  tint: 0xffffff },
-  { c: 43, r: 41, char: 'bach-dien',  name: 'Bạch Điện',  lv: 9,  n: 15, aggro: true,  area: 'Đồi Bạch Điện',   tint: 0xffffff },
-  { c: 44, r: 24, char: 'lang-nguyet',name: 'Lăng Nguyệt',lv: 11, n: 15, aggro: true,  area: 'Rừng Nguyệt',     tint: 0xffffff },
-  { c: 33, r: 33, char: 'tieu-linh',  name: 'Tiểu Linh',  lv: 13, n: 15, aggro: true,  area: 'Gốc Tiểu Linh',   tint: 0xffffff },
-  { c: 12, r: 44, char: 'tieu-linh',  name: 'Tiểu Linh',  lv: 15, n: 15, aggro: true,  area: 'Rừng Sâu',        tint: 0xffffff },
-  { c: 46, r: 9,  char: 'lang-tieu',  name: 'Lăng Tiêu',  lv: 17, n: 15, aggro: true,  area: 'Vực Lăng Tiêu',   tint: 0xffffff },
-];
+const VILLAGE = Object.assign({ name: MAPDEF.name }, MAPDEF.center);   // tâm map: điểm xuất hiện / quảng trường
+const SPOTS = (MAPDEF.spots || []).map(sp => Object.assign({ tint: 0xffffff }, sp));
 window.SPOTS = SPOTS;   // cho quests.js đọc bãi quái
 window.VILLAGE = VILLAGE;   // cho feel.js biet moc vung lang
+// công trình làng: ảnh lưu 1.5x, bán kính chặn (ô) theo móng nhà
+const VILLAGE_ART = ['v-chief', 'v-chief-hero', 'v-tavern', 'v-forge', 'v-medicine', 'v-store', 'v-houseA', 'v-houseB', 'v-well'];
+const VILLAGE_RAD = { 'v-chief': 1.5, 'v-chief-hero': 3.4, 'v-tavern': 1.6, 'v-forge': 1.3, 'v-medicine': 1.25, 'v-store': 1.25, 'v-houseA': 1.1, 'v-houseB': 1.1, 'v-well': 0.55, 'v-bridge': 0, 'v-fish': 0 };
 
-const MAPS = {
-  1: { seed: 20261108, bgm: 'bgm-field' },
-  2: { seed: 20261211, bgm: 'bgm-forest', village: { c: 9, r: 44, name: 'Trại Rừng Thề' },
-    spots: [
-      { c: 22, r: 36, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 11, n: 15, aggro: true, area: 'Rừng Tên Lạc', tint: 0xdfffd6 },
-      { c: 35, r: 23, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 14, n: 15, aggro: true, area: 'Rừng Thề Sâu', tint: 0xc6e8ff },
-      { c: 44, r: 11, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 16, n: 15, aggro: true, area: 'Gốc Cổ Thụ', tint: 0xffffff },
-      { c: 14, r: 30, char: 'tieu-linh', name: 'Tiểu Linh', lv: 12, n: 15, aggro: true, area: 'Bụi Linh', tint: 0xffe6c6 },
-      { c: 28, r: 42, char: 'tieu-linh', name: 'Tiểu Linh', lv: 15, n: 15, aggro: true, area: 'Linh Sâu', tint: 0xffe6c6 },
-      { c: 40, r: 34, char: 'lang-nguyet', name: 'Lăng Nguyệt', lv: 17, n: 15, aggro: true, area: 'Nguyệt Cao', tint: 0xc6e8ff },
-      { c: 18, r: 16, char: 'lang-tieu', name: 'Lăng Tiêu', lv: 13, n: 15, aggro: true, area: 'Tiêu Rậm', tint: 0xffffff },
-      { c: 46, r: 28, char: 'lang-tieu', name: 'Lăng Tiêu', lv: 18, n: 15, aggro: true, area: 'Tiêu Vực', tint: 0xffffff },
-      { c: 10, r: 20, char: 'tinh-mac', name: 'Tịnh Mặc', lv: 10, n: 15, aggro: true, area: 'Mặc Đồng', tint: 0xffffff },
-    ] },
-};
-const MAP_ID = (() => { try { const d = JSON.parse(localStorage.getItem('ttbd-save-v1') || 'null'); return d && d.map === 2 ? 2 : 1; } catch (e) { return 1; } })();
-const MAPCFG = MAPS[MAP_ID];
-if (MAPCFG.village) Object.assign(VILLAGE, MAPCFG.village);
-if (MAPCFG.spots) SPOTS.splice(0, SPOTS.length, ...MAPCFG.spots);
+const TOWN = MAPDEF.type === 'town';
+const TOWN_R = MAPDEF.walkRadius || Math.floor(N / 2) - 4;   // thôn: nửa cạnh vùng đi được, ngoài là vành rừng
+const MAPCFG = { seed: MAPDEF.seed || 7, bgm: MAPDEF.bgm || 'bgm-field' };
+window.MAP_ID = MAP_ID; window.TOWN = TOWN; window.TOWN_R = TOWN_R;
+const inTown = (c, r, pad = 0) => Math.max(Math.abs(c - VILLAGE.c), Math.abs(r - VILLAGE.r)) <= TOWN_R + pad;
 
 
 function genMap(seed) {
@@ -89,9 +83,29 @@ function genMap(seed) {
     if (near(c, r, VILLAGE, 4.5)) t[r][c] = Math.hypot(c - VILLAGE.c, r - VILLAGE.r) < 2.6 ? G.SAND : G.GRASS[(c * 7 + r) % 3];
     for (const s of SPOTS) if (near(c, r, s, 3.6)) t[r][c] = (hash(c, r, 5) < 0.45) ? G.DIRT : G.GRASS[(c + r) % 3];
   }
-  // đường uốn lượn nối làng -> các bãi; qua nước thành cầu gỗ
-  const way = [VILLAGE, SPOTS[0], SPOTS[1], SPOTS[2]];
-  for (let i = 0; i < way.length - 1; i++) {
+  // Thôn: nền sạch trước, sau đó vẽ suối lấy đường cong từ file map (nước + bờ cát)
+  if (TOWN) for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    if (!inTown(c, r, 3)) continue;
+    if (G.WATER.includes(t[r][c]) || t[r][c] === G.SAND && !near(c, r, VILLAGE, 2.6)) t[r][c] = G.GRASS[(c * 7 + r) % 3];
+  }
+  if (TOWN && MAPDEF.river && MAPDEF.river.points.length > 1) {
+    const pts = MAPDEF.river.points, width = MAPDEF.river.width || 1.2, bank = MAPDEF.river.bank || 1.5;
+    for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) {
+      let md = 1e9;
+      for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1], vx = b.c - a.c, vy = b.r - a.r, d2 = vx * vx + vy * vy || 1;
+        const u = Math.max(0, Math.min(1, ((c - a.c) * vx + (r - a.r) * vy) / d2)); md = Math.min(md, Math.hypot(c - (a.c + vx * u), r - (a.r + vy * u))); }
+      if (md <= width) { t[r][c] = G.WATER[(c + r) & 1]; block[r][c] = true; }
+      else if (md <= width + bank && !G.PATH.includes(t[r][c])) { t[r][c] = G.SAND; block[r][c] = false; }
+    }
+  }
+  // Streets are map data. If a street crosses the stream, convert those water cells into walkable wood bridge deck.
+  const way = TOWN ? null : [VILLAGE, SPOTS[0], SPOTS[1], SPOTS[2]].filter(Boolean);
+  if (TOWN) for (const end of (MAPDEF.streets || [{ c: VILLAGE.c, r: VILLAGE.r + TOWN_R - 2 }, { c: VILLAGE.c + TOWN_R - 2, r: VILLAGE.r }])) {
+    const steps = Math.ceil(Math.hypot(end.c - VILLAGE.c, end.r - VILLAGE.r) * 2);
+    for (let i = 0; i <= steps; i++) { const f = i / steps, c = Math.round(VILLAGE.c + (end.c - VILLAGE.c) * f), r = Math.round(VILLAGE.r + (end.r - VILLAGE.r) * f);
+      for (const [dc, dr] of [[0, 0], [1, 0], [0, 1], [1, 1]]) if (c + dc > 0 && r + dr > 0 && c + dc < N - 1 && r + dr < N - 1) { const rr = r + dr, cc = c + dc, k = t[rr][cc]; t[rr][cc] = (G.WATER.includes(k) || k === G.WOOD) ? G.WOOD : G.PATH[0]; } }
+  }
+  for (let i = 0; way && i < way.length - 1; i++) {
     const a = way[i], b = way[i + 1], steps = Math.ceil(Math.hypot(b.c - a.c, b.r - a.r) * 3);
     for (let s = 0; s <= steps; s++) {
       const f = s / steps, wob = Math.sin(f * Math.PI * 2 + i) * 2.2 * Math.sin(f * Math.PI);
@@ -215,7 +229,7 @@ class Boot extends Phaser.Scene {
   constructor() { super('boot'); }
   preload() {
     this.load.on('loaderror', f => { f.__retry = (f.__retry || 0) + 1; if (f.__retry <= 2) { const t = f.type, k = f.key, u = f.url, c = f.config; this.time ? 0 : 0; setTimeout(() => { if (t === 'spritesheet') this.load.spritesheet(k, u, c); else if (t === 'image') this.load.image(k, u); else if (t === 'audio') this.load.audio(k, u); this.load.start(); }, 400); return; } window.__loadFails = (window.__loadFails || []).concat(f.key); HUD.log('Lỗi tải: ' + f.key); });
- this.load.json('man', LT + 'manifest.json?v=' + (window.__KT_VER || 13)); }
+ this.load.json('man', LT + 'manifest.json?v=' + (window.__KT_VER || 13)); this.load.json('propdefs', 'assets/props.json?v=' + (window.__KT_VER || 13)); }
   create() { this.scene.start('main'); }
 }
 
@@ -256,7 +270,12 @@ class Main extends Phaser.Scene {
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
     for (const k of ['grass', 'dirt', 'stone']) this.load.image('g-' + k, 'assets/tex/ground-' + k + '.webp?v=' + (window.__KT_VER || 29));
-    this.load.json('propdefs', 'assets/props.json');
+    // vật thể khai báo trong props.json có 'file' riêng (deco-*) trước đây KHÔNG được nạp -> 418 ô __MISSING đen
+    { const PD = this.cache.json.get('propdefs') || {};
+      for (const [k, d] of Object.entries(PD)) if (d && d.file && !this.textures.exists(k)) this.load.image(k, d.file + '?v=' + (window.__KT_VER || 13)); }
+    for (const k of VILLAGE_ART) this.load.image(k, 'assets/village/' + k + '.webp?v=' + (window.__KT_VER || 26));
+    for (const k of ['npc2-thuoc', 'npc2-ren', 'npc2-truong', 'npc2-taphoa', 'npc2-tuu']) this.load.image(k, LT + k + '.webp');
+    for (let i = 0; i < 3; i++) this.load.image('reed-art' + i, 'assets/reeds/reed' + i + '.webp?v=59');
     this.load.json('walkmask', 'assets/data/walkmask.json');
     this.load.image('arena', 'assets/arena.jpg');
     if (this.textures.exists('vfx-boss') || true) this.load.image('vfx-boss', 'assets/lt/vfx-boss.webp');
@@ -264,8 +283,9 @@ class Main extends Phaser.Scene {
     for (const [k, f] of Object.entries(M.bgm)) this.load.audio(k, LT + f);
     for (const [k, f] of Object.entries(M.sfx)) this.load.audio('sfx-' + k, LT + f);
     const t = this.add.text(innerWidth / 2, innerHeight / 2, 'Đang tải 0%', { font: '16px Segoe UI', color: '#f0d79a' }).setOrigin(0.5).setScrollFactor(0);
-    this.load.on('progress', p => t.setText('Đang tải ' + Math.round(p * 100) + '%'));
-    this.load.on('complete', () => t.destroy());
+    this.load.on('progress', p => { if (t && t.active) t.setText('Đang tải ' + Math.round(p * 100) + '%'); });
+    // nạp thêm asset lúc chạy (trang phục) không được chạm vào text đã huỷ
+    this.load.on('complete', () => { try { t.destroy(); } catch (e) { } this.load.off('progress'); });
   }
 
   makeTextures() {
@@ -298,6 +318,12 @@ class Main extends Phaser.Scene {
     // (gộp thư viện props sau khi OH/SH được khai báo — xem bên dưới)
     const MINPROP = 1.6;   // khoảng cách tối thiểu giữa 2 vật thể (ô)
     const map = this.map = genMap(MAPCFG.seed);
+    // Tân thủ trấn: dọn cây/đá rải ngẫu nhiên trong lõi phố; để mặt phố, hai hàng nhà và quảng trường đọc rõ.
+    if (TOWN) { const CITY_R = 20;
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (Math.max(Math.abs(c - VILLAGE.c), Math.abs(r - VILLAGE.r)) <= CITY_R) {
+        map.obj[r][c] = null; map.block[r][c] = G.WATER.includes(map.t[r][c]); }
+      map.deco = map.deco.filter(d => Math.max(Math.abs(d.c - VILLAGE.c), Math.abs(d.r - VILLAGE.r)) > CITY_R);
+    }
     { const keep = [];
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { const p = map.obj[r][c]; if (!p) continue;
         let ok = true; for (const k of keep) if (Math.hypot(k[0] - c, k[1] - r) < MINPROP) { ok = false; break; }
@@ -306,16 +332,18 @@ class Main extends Phaser.Scene {
       const R2 = rng(MAPCFG.seed + 77), CL = [];
       for (let i = 0; i < 12; i++) CL.push([6 + R2() * (N - 12), 6 + R2() * (N - 12)]);
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
-        const p = map.obj[r][c]; if (!p || /^(gate|flag|drum|well|shrine|cart|hut|bridge|house-)/.test(p)) continue;
+        const p = map.obj[r][c]; if (!p || /^(gate|flag|drum|well|shrine|cart|hut|bridge|house-|v-)/.test(p)) continue;
         const inC = CL.some(q => Math.hypot(q[0] - c, q[1] - r) < 4.5);
         if (!inC && R2() > 0.4) { map.obj[r][c] = null; map.block[r][c] = false; } } }
     // công trình thôn quanh quảng trường (đặt tay, không ngẫu nhiên)
-    const STRUCTS = [['gate', 10, 14], ['flag', 9, 8], ['drum', 12, 9], ['well', 8, 12], ['shrine', 7, 7], ['cart', 13, 12], ['hut', 6, 13], ['bridge', 11, 6]];
-    for (const [k, c, r] of STRUCTS) if (c > 0 && r > 0 && c < N && r < N) { map.obj[r][c] = k; map.block[r][c] = true; }
+    // LÀNG kiểu TIÊU TỬ BÁ ĐẠO: phố đầy đủ nhà cửa/cửa hàng/NPC (assets/village, vẽ isometric 2:1)
+    const STRUCTS = MAPDEF.structs || [];   // công trình đặt tay: đọc từ file map
+    for (const [k, c0, r0] of STRUCTS) { const c = Math.round(c0), r = Math.round(r0); if (c > 0 && r > 0 && c < N && r < N) { map.obj[r][c] = k; map.block[r][c] = true; } }
+    window.KTGround.RAD_OVERRIDE = Object.assign(window.KTGround.RAD_OVERRIDE || {}, VILLAGE_RAD);
     // tranh làng đã có nhà/cây sẵn: xoá vật thể trùng trong bán kính 8 ô (giữ vài món điểm nhấn)
-    { const KEEP = /^(well|drum|gate|flag|lantern|shrine)$/;
+    { const KEEP = /^(well|drum|gate|flag|lantern|shrine|v-.*)$/;
       for (let r2 = 0; r2 < N; r2++) for (let c2 = 0; c2 < N; c2++) { const q = map.obj[r2][c2]; if (!q || KEEP.test(q)) continue;
-        if (Math.hypot(c2 - VILLAGE.c, r2 - VILLAGE.r) < 8) { map.obj[r2][c2] = null; map.block[r2][c2] = false; } } }
+        if (Math.hypot(c2 - VILLAGE.c, r2 - VILLAGE.r) < 9) { map.obj[r2][c2] = null; map.block[r2][c2] = false; } } }
     // VIỀN CẢNH: vành đá chạy quanh biên để mép map không bị cắt cụt
     for (let i = 1; i < N - 1; i++) for (const [r, c] of [[1, i], [N - 2, i], [i, 1], [i, N - 2]]) {
       if (!map.obj[r][c] && (i % 3 !== 0)) { map.obj[r][c] = 'rock'; map.block[r][c] = true; } }
@@ -324,11 +352,11 @@ class Main extends Phaser.Scene {
     const tG0 = performance.now();
     const texPix = k => { if (!this.textures.exists(k)) return null; const im = this.textures.get(k).getSourceImage(); const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const x = cv.getContext('2d'); x.drawImage(im, 0, 0); return { d: x.getImageData(0, 0, im.width, im.height).data, w: im.width, h: im.height }; };
     const tex = { grass: texPix('tex-grass'), dirt: texPix('tex-dirt'), brick: texPix('tex-brick'), stone: texPix('tex-stone'), paint: texPix('tex-ground-paint') };
-    const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 2, tex, plaza: { c: VILLAGE.c, r: VILLAGE.r, rad: 2.9 } });
+    const gt = KTGround.makeGroundTexture(this, map, G, { isoX, isoY, TW, TH, div: 2, tex, plaza: TOWN ? { c: VILLAGE.c, r: VILLAGE.r, rad: MAPDEF.plazaRadius || 2.9 } : null });
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
     // TOÀN MAP = 1 ảnh liền đã keystone (nghiêng vào trong), phủ đúng 7168x3584 world px
     // NỀN MỚI: 3 texture liền mép trộn theo địa hình, vẽ đúng độ phân giải gốc (js/terrain.js)
-    if (window.KTTerrain && this.textures.exists('g-grass')) { this.terrain = KTTerrain.init(this, { N, TW, TH, village: VILLAGE, spots: SPOTS, seed: (MAPCFG.seed || 7) }); }
+    if (window.KTTerrain && this.textures.exists('g-grass')) { const tVil = TOWN ? Object.assign({}, VILLAGE, { plazaRadius: MAPDEF.plazaRadius || 5.6 }) : Object.assign({}, VILLAGE, { plaza: false }); const tSpots = TOWN ? (MAPDEF.streets || []) : SPOTS; this.terrain = KTTerrain.init(this, { N, TW, TH, village: tVil, spots: tSpots, seed: (MAPCFG.seed || 7), river: TOWN ? MAPDEF.river : null }); }
     if (false)
     if (this.textures.exists('sec0')) { const COLS = 3, ROWS = 3;
       const W0 = (N * TW) / COLS, H0 = (N * TH) / ROWS, X0 = -N * TW / 2;
@@ -343,9 +371,9 @@ class Main extends Phaser.Scene {
     // walkmask sinh từ dữ liệu thật TIÊU TỬ BÁ ĐẠO: ô = 1 là chỗ tranh nền đã có nhà/đá/nước.
     // Đặt thêm cây/đá lên đó là thừa và làm map bí -> bỏ hết, rồi giữ luật cách nhau >= 3.4 ô.
     this.propTrim = { cutMask: 0, cutNear: 0, cutRock: 0 };
-    { const wmP = this.cache.json.get('walkmask');
+    { const wmP = MAPDEF.walkmask ? this.cache.json.get('walkmask') : null;
       if (wmP && wmP.w) {
-        const KEEP = /^(gate|flag|drum|well|lantern|shrine|cart|hut|bridge|house-)/;   // công trình đặt tay: giữ
+        const KEEP = /^(gate|flag|drum|well|lantern|shrine|cart|hut|bridge|house-|v-)/;   // công trình đặt tay: giữ
         const kept = [];
         for (let r = 1; r < N - 1; r++) for (let c = 1; c < N - 1; c++) {
           const p = map.obj[r][c]; if (!p) continue;
@@ -391,9 +419,23 @@ class Main extends Phaser.Scene {
         map.obj[r][c] = p; map.block[r][c] = true; nb++;
       }
       this.borderProps = nb; }
+    // THÔN KHÉP KÍN: ngoài vùng thôn bỏ hết vật thể, vành rừng dày 3 ô bao quanh
+    if (TOWN) { const RT = rng(MAPCFG.seed + 515); let nw = 0;
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+        const d = Math.max(Math.abs(c - VILLAGE.c), Math.abs(r - VILLAGE.r));
+        if (d <= TOWN_R) continue;
+        map.obj[r][c] = null; map.block[r][c] = true;
+        if (d <= TOWN_R + 3 && c > 0 && r > 0 && c < N - 1 && r < N - 1 && ((c + r) % 2 === 0 || d === TOWN_R + 1)) {
+          const x = RT(); map.obj[r][c] = x < 0.55 ? 'pine' : x < 0.8 ? 'oak' : x < 0.9 ? 'sakura' : 'rock'; nw++; }
+      }
+      this.townWall = nw; }
     this.obs = KTGround.buildObstacles(map, G);
+    if (TOWN) { const SUB = this.obs.SUB, FN = this.obs.FN, fine = this.obs.fine;
+      for (let rr = 0; rr < FN; rr++) for (let cc = 0; cc < FN; cc++) {
+        const c = cc / SUB, r = rr / SUB;
+        if (Math.max(Math.abs(c - VILLAGE.c - 0.5 / SUB), Math.abs(r - VILLAGE.r - 0.5 / SUB)) > TOWN_R + 0.5) fine[rr * FN + cc] = 1; } }
     // ---- lớp chặn sinh từ TRANH NỀN (nhà/đá/nước vẽ trong ảnh) ----
-    { const wm = this.cache.json.get('walkmask');
+    { const wm = MAPDEF.walkmask ? this.cache.json.get('walkmask') : null;
       if (wm && wm.w) {
         const SUB = this.obs.SUB, FN = this.obs.FN, fine = this.obs.fine;
         let painted = 0;
@@ -410,7 +452,7 @@ class Main extends Phaser.Scene {
       } }
     // ---- NƯỚC "MA": nền sinh bằng noise nên có ô nước nằm đúng chỗ tranh nền là đất liền.
     // Giữ chặn nước chỉ ở ô mà walkmask cũng chặn (nước thật của map gốc), còn lại bỏ -> hết tường vô hình.
-    { const wm = this.cache.json.get('walkmask');
+    { const wm = MAPDEF.walkmask ? this.cache.json.get('walkmask') : null;
       this.propTrim.waterFree = 0;
       if (wm && wm.w && this.obs.water) {
         for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
@@ -435,12 +477,18 @@ class Main extends Phaser.Scene {
     let nObj = 0;
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
       const p = map.obj[r][c]; if (!p) continue;
-      const x = isoX(c, r) + (hash(c, r, 9) - 0.5) * 18, y = isoY(c, r) + (hash(c, r, 11) - 0.5) * 8;
-      const s = this.add.image(x, y + 6, p).setOrigin(0.5, OH[p]).setDepth(y + 6);
-      s.setScale(0.72 + hash(c, r, 13) * 0.2); if (hash(c, r, 17) < 0.5) s.setFlipX(true);
-      this.props.push({ s, sh: this.add.image(x + 10, y + 2, 'shadow').setScale(SH[p], SH[p] * 0.9).setDepth(-8e5), c, r });
+      const isV = p.startsWith('v-');
+      const x = isoX(c, r) + (isV ? 0 : (hash(c, r, 9) - 0.5) * 18), y = isoY(c, r) + (isV ? 0 : (hash(c, r, 11) - 0.5) * 8);
+      const s = this.add.image(x, y + 6, p).setOrigin(0.5, p === 'v-fish' ? 0.5 : isV ? 0.86 : OH[p]).setDepth(y + 6);
+      if (isV) s.setScale(1 / 1.5);   // ảnh làng giữ góc chéo: không lật, không co ngẫu nhiên
+      else { s.setScale(0.72 + hash(c, r, 13) * 0.2); if (hash(c, r, 17) < 0.5) s.setFlipX(true); }
+      // cổng làng: 2 cổng đối xứng 2 bên đường -> bỏ jitter + scale ngẫu nhiên, lật theo phía
+      if (p === 'gate') { s.setPosition(isoX(c, r), isoY(c, r) + 6); s.setScale(0.82); s.setFlipX(r > VILLAGE.r ? c < VILLAGE.c : r < VILLAGE.r); }
+      const shs = isV ? (VILLAGE_RAD[p] != null ? VILLAGE_RAD[p] : 1) * 2.2 : SH[p];
+      this.props.push({ s, sh: this.add.image(x + (isV ? 0 : 10), y + 2, 'shadow').setScale(shs, shs * 0.9).setAlpha(isV ? 0.55 : 1).setDepth(-8e5), c, r, fish: p === 'v-fish', homeX: x, homeY: y + 6, phase: hash(c, r, 29) * Math.PI * 2 });
       nObj++;
     }
+    if (window.KTReeds && !TOWN) { try { KTReeds.init(this, { map, G, N, isoX, isoY, village: VILLAGE, spots: SPOTS, seed: MAPCFG.seed }); } catch (e) { console.error('reeds', e); } }
     this.stats = { nGround, nDeco: map.deco.length, nObj, groundMs, groundTex: gt.w + '×' + gt.h, obstacles: this.obs.list.length };
 
     // nhân vật
@@ -455,7 +503,10 @@ class Main extends Phaser.Scene {
 
     // camera
     const cam = this.cameras.main;
-    cam.setBounds(isoX(0, N - 1) - 200, -200, N * TW + 400, N * TH + 400);
+    if (TOWN) { const R2 = TOWN_R + 2.5, vc = VILLAGE.c, vr = VILLAGE.r;
+      const x0 = isoX(vc - R2, vr + R2), x1 = isoX(vc + R2, vr - R2), y0 = isoY(vc - R2, vr - R2), y1 = isoY(vc + R2, vr + R2);
+      cam.setBounds(x0, y0 - 160, x1 - x0, y1 - y0 + 220); }
+    else cam.setBounds(isoX(0, N - 1) - 200, -200, N * TW + 400, N * TH + 400);
     cam.startFollow(this.hero.spr, true, 0.12, 0.12);
     // Zoom xa hơn để thấy toàn cảnh map; landscape phone ~0.78 thay vì ~0.96
     // Khung ngang thấy rộng hơn; nhân vật nhỏ vừa đủ để không che map
@@ -497,12 +548,12 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     if (musBtn) musBtn.onclick = () => this.toggleMusic();
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regen() });
     this.time.addEvent({ delay: 200, loop: true, callback: () => this.updateHud() });
-    HUD.log('Đến ' + VILLAGE.name + '. Đi theo đường đất để tới bãi quái.');
+    HUD.log(TOWN ? 'Đến ' + VILLAGE.name + '. Ra dã ngoại qua điểm truyền tống ở cổng Nam.' : 'Đến ' + VILLAGE.name + '. Điểm truyền tống về thôn ở ngay cạnh.');
     if (window.KTStory) { try { KTStory.install(this); } catch (e) { showErr('story: ' + e.message); } }
     if (window.KTLoot) { try { KTLoot.install(this); } catch (e) { showErr('loot: ' + e.message); } }
     if (window.KTQuests) { try { KTQuests.install(this); } catch (e) { showErr('quest: ' + e.message); } }
     if (window.KTFeel) { try { KTFeel.install(this); } catch (e) { showErr('feel: ' + e.message); } }
-    window.__kt = this; this.children.list.forEach(o => { if (o.texture && o.texture.key === '__MISSING') o.setVisible(false); });
+    window.__kt = this; if (window.KTOutfits) this.outfits = window.KTOutfits.attach(this, this.hero); this.children.list.forEach(o => { if (o.texture && o.texture.key === '__MISSING') o.setVisible(false); });
   }
 
   tryMusic() {
@@ -538,13 +589,21 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
 
   play(u, clip, force) {
     if (u.clip === clip && !force) return;
+    // clip không có trong manifest (ví dụ run-front/run-back khi chưa có atlas 4 hướng) -> lùi về clip an toàn
+    if (!(this.M.chars[u.cid].clips || {})[clip]) clip = (this.M.chars[u.cid].clips || {}).idle ? 'idle' : clip;
+    if (u.clip === clip && !force) return;
     if (u.hdStatic) { u.clip = clip; return; }
-    const c = this.M.chars[u.cid].clips[clip];
+    const c = (window.KTOutfits && window.KTOutfits.clipFor) ? window.KTOutfits.clipFor(this, u, clip) : this.M.chars[u.cid].clips[clip];
     u.clip = clip;
     u.spr.setTexture(u.cid + ':' + clip).setOrigin(c.pivotX / c.w, c.footY / c.h);
-    // giữ chiều cao nhân vật không đổi giữa các động tác (mỗi clip bị cắt khung khác nhau)
-    u.spr.setScale((u.targetH || 120) / (c.h * 2));
-    { const ak = u.cid + ':' + clip, a = this.anims.get(ak); if (a && a.frames.length) u.spr.play(ak); }
+    // giữ chiều cao nhân vật không đổi giữa các động tác: đo charH (thân thật) thay vì chiều cao khung,
+    // vì mỗi clip bị cắt khung khác nhau; fall-die không có charH nên vẫn dùng khung.
+    u.spr.setScale((u.targetH || 120) / ((c.charH || c.h) * 2));
+    { const base = u.cid + ':' + clip;
+      const ak = (window.KTOutfits && window.KTOutfits.keyFor) ? window.KTOutfits.keyFor(this, u, clip) : base;
+      let a = this.anims.get(ak);
+      if (!a || !a.frames.length) a = this.anims.get(base);
+      if (a && a.frames.length) u.spr.play(ak && this.anims.get(ak) ? ak : base); }
   }
 
   place(u) {
@@ -745,11 +804,48 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
         if (!moved) return false;   // kẹt thật thì giữ waypoint, thử lại nhịp sau
       }
     }
-    const sx = (dc - dr); if (Math.abs(sx) > 0.05) u.face = sx > 0 ? 1 : -1;
+    u.clipWanted = this.runClipFor(u, dc, dr); u.moveVx = dc; u.moveVr = dr;
     return Math.hypot(tc - u.c, tr - u.r) < 0.08;
   }
 
   faceTo(u, t) { const sx = (t.c - t.r) - (u.c - u.r); if (Math.abs(sx) > 0.02) u.face = sx > 0 ? 1 : -1; }
+
+  /* Hướng đi -> clip 8 hướng isometric 2:1.
+     Screen dx = (dc - dr) * 64, Screen dy = (dc + dr) * 32.
+     deg = atan2(dy, dx) in degrees [-180, 180]. */
+  runClipFor(u, dc, dr) {
+    const clips = (this.M.chars[u.cid] || {}).clips || {};
+    const sx = (dc - dr) * 64.0;
+    const sy = (dc + dr) * 32.0;
+    const deg = Math.atan2(sy, sx) * (180 / Math.PI);
+    const adeg = Math.abs(deg);
+
+    let want = 'run';
+    let face = (deg > -90 && deg < 90) ? 1 : -1;
+
+    if (adeg <= 15 || adeg >= 165) {
+      want = 'run';
+      face = adeg <= 90 ? 1 : -1;
+    } else if (adeg >= 65 && adeg <= 115) {
+      want = deg > 0 ? 'run-front' : 'run-back';
+      face = 1;
+    } else if (deg > 0) {
+      want = 'run-front-diag';
+      face = deg < 90 ? 1 : -1;
+    } else {
+      want = 'run-back-diag';
+      face = deg > -90 ? 1 : -1;
+    }
+
+    u.dirWant = want;
+    u.face = face;
+    if (clips[want]) return want;
+    if (want === 'run-front-diag' && clips['run-front']) return 'run-front';
+    if (want === 'run-back-diag' && clips['run-back']) return 'run-back';
+    return clips.run ? 'run' : 'idle';
+  }
+
+  playRun(u) { this.play(u, u.clipWanted || 'run'); }
 
   cull(time) {
     if (time - (this._cullT || 0) < 250) return;
@@ -785,6 +881,8 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     if (window.KTQuests) { try { KTQuests.tick(this, 0.033); } catch (e) { } }
     if (this.afkLock) return;
     this.cull(time);
+    // C? koi b?i ch?m trong su?i, chuy?n ??ng nh? ?? v?n ??c r? ? zoom gameplay.
+    for (const p of this.props) if (p.fish) { const w = time * 0.001 + p.phase; p.s.x = p.homeX + Math.sin(w) * 2.5; p.s.y = p.homeY + Math.sin(w * 1.6) * 1.1; p.s.rotation = Math.sin(w) * 0.035; }
     // dt theo GIỜ THỰC, không phụ thuộc nhịp khung hình của trình duyệt
     const nowMs = performance.now();
     let dt = (nowMs - (this._tLast || nowMs)) / 1000;
@@ -804,7 +902,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       if (h.target && !h.target.dead) {
         const d = Math.hypot(h.target.c - h.c, h.target.r - h.r);
         if (d > 1.25) {
-          if (!busy) { this.play(h, 'run'); this.stepToward(h, h.target.c, h.target.r, 2.1, dt); }
+          if (!busy) { this.playRun(h); this.stepToward(h, h.target.c, h.target.r, 2.1, dt); }
         } else {
           this.faceTo(h, h.target);
           if (time >= h.nextAtk && !busy) {
@@ -820,7 +918,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
           } else if (!busy) this.play(h, 'idle');
         }
       } else if (h.path && h.path.length) {
-        if (!busy) { this.play(h, 'run'); if (this.stepToward(h, h.path[0].c, h.path[0].r, 2.3, dt)) h.path.shift(); }
+        if (!busy) { this.playRun(h); if (this.stepToward(h, h.path[0].c, h.path[0].r, 2.3, dt)) h.path.shift(); }
       } else {
         h.target = null; h.path = null;
         if (!busy) this.play(h, 'idle');
@@ -845,7 +943,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       if (m.state !== 'chase' && m.state !== 'return' && !h.dead && dh < 3.5 && m.isBoss) { m.state = 'chase'; }
       if (m.state === 'chase') {
         if (h.dead || dHome > 9) { m.state = 'return'; }
-        else if (dh > 1.15) { if (!busy) { this.play(m, 'run'); this.stepToward(m, h.c, h.r, 1.6, dt); } }
+        else if (dh > 1.15) { if (!busy) { this.playRun(m); this.stepToward(m, h.c, h.r, 1.6, dt); } }
         else {
           this.faceTo(m, h);
           if (time >= m.nextAtk && !busy) {
@@ -857,7 +955,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
           } else if (!busy) this.play(m, 'idle');
         }
       } else if (m.state === 'return') {
-        this.play(m, 'run'); m.hp = Math.min(m.maxHp, m.hp + m.maxHp * dt * 0.5);
+        this.playRun(m); m.hp = Math.min(m.maxHp, m.hp + m.maxHp * dt * 0.5);
         if (this.stepToward(m, m.home.c, m.home.r, 2.0, dt)) { m.state = 'idle'; m.hp = m.maxHp; m.provoked = false; }
       } else if (m.state === 'idle') {
         if (!busy) this.play(m, 'idle');
@@ -869,7 +967,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
           if (Math.hypot(gc - m.home.c, gr - m.home.r) > 3.2) { const k = d / Math.max(0.01, Math.hypot(m.home.c - m.c, m.home.r - m.r)); gc = m.c + (m.home.c - m.c) * k; gr = m.r + (m.home.r - m.r) * k; }
           m.state = 'wander'; m.goal = { c: gc, r: gr }; m.wanderT = 0; }
       } else if (m.state === 'wander') {
-        this.play(m, 'run');
+        this.playRun(m);
         m.wanderT = (m.wanderT || 0) + dt;
         if (this.stepToward(m, m.goal.c, m.goal.r, 0.45, dt) || m.wanderT > 3) { m.state = 'idle'; m.wait = 7.6 + Math.random() * 0.8; }
       }

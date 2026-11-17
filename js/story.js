@@ -11,6 +11,17 @@
       idle: ['Nồi phở này từng giữ Ấn Phố đấy, cháu ạ.', 'Ăn bát phở rồi hẵng đi, đường còn dài.'] },
     mo: { name: 'Thầy Mo', img: 'npc-mo', bust: 'assets/lt/bust-mo.webp', dc: -2.4, dr: 1.6,
       idle: ['Tàn Ảnh sợ tiếng chuông và nước sạch.', 'Ấn mà vỡ hết, người sẽ quên cả tên mình.'] },
+    // NPC trước cửa từng cửa hàng (cửa nhà quay xuống-phải = hướng +c)
+    thuoc: { name: 'Đại Phu Lý · Tiệm Thuốc', img: 'npc2-thuoc', bust: 'assets/lt/bust-thuoc.webp', dc: -2.6, dr: 2.9,
+      idle: ['Thuốc hồi máu đây, đi săn nhớ mang theo.', 'Vết thương Tàn Ảnh để lâu sẽ lạnh tới xương.'] },
+    ren: { name: 'Thợ Rèn Trương · Lò Rèn', img: 'npc2-ren', bust: 'assets/lt/bust-ren.webp', dc: -2.6, dr: -1.8,
+      idle: ['Mang quặng về đây, ta rèn cho cây giáo bén hơn.', 'Vũ khí tốt cứu mạng hơn võ công giỏi.'] },
+    truong: { name: 'Trưởng Thôn', img: 'npc2-truong', bust: 'assets/lt/bust-truong.webp', dc: 1.6, dr: -2.6,
+      idle: ['Thôn Vân Sơn nhỏ nhưng chưa từng để khách đói.', 'Quái ngoài đồng mỗi ngày một đông, cháu cẩn thận.'] },
+    taphoa: { name: 'Bà Tư · Tạp Hóa', img: 'npc2-taphoa', bust: 'assets/lt/bust-taphoa.webp', dc: 4.6, dr: 2.9,
+      idle: ['Gạo, muối, dây thừng — gì cũng có.', 'Mua nhiều bà bớt cho.'] },
+    tuu: { name: 'Chưởng Quầy · Tửu Lầu', img: 'npc2-tuu', bust: 'assets/lt/bust-tuu.webp', dc: 3.2, dr: -1.4,
+      idle: ['Rượu ngon, chuyện giang hồ còn ngon hơn.', 'Lên lầu nghe hát không khách quan?'] },
   };
 
   const NARRATOR = { name: 'Lời dẫn', bust: null };
@@ -40,14 +51,14 @@
         ['pho', 'Đúng nó rồi! Để ông đặt lại vào nồi… Ấn Phố đóng lại rồi, cháu thấy không — trời trong hẳn.'],
         ['pho', 'Nhưng còn năm Ấn nữa, và kẻ trộm Ấn vẫn ngoài kia. Cổng phía đông sẽ mở khi cháu sẵn sàng.'],
       ], reward: { exp: 400 } },
-    { id: 'portal1', type: 'portal', map: 1, title: 'Đi qua cổng phía đông vào Rừng Thề' },
-    { id: 'kill_ln', type: 'kill', ch: 'Chương 2 · Ấn Rừng', map: 2, char: 'lang-nguyet', need: 10, spot: 0, title: 'Hạ 10 Tàn Ảnh Lăng Nguyệt', reward: { exp: 1500 },
+    { id: 'portal1', type: 'portal', map: 'thon-van-son', title: 'Vào Rừng Thề qua điểm truyền tống phía Đông thôn' },
+    { id: 'kill_ln', type: 'kill', ch: 'Chương 2 · Ấn Rừng', map: 'rung-the', char: 'lang-nguyet', need: 10, spot: 0, title: 'Hạ 10 Tàn Ảnh Lăng Nguyệt', reward: { exp: 1500 },
       done: [[null, 'Tên của Tàn Ảnh cắm đầy thân cây — mũi nào cũng chỉ về một hướng: Gốc Cổ Thụ.']] },
-    { id: 'boss2', type: 'boss', ch: 'Chương 2 · Ấn Rừng', map: 2, spot: 2, bossChar: 'tieu-linh', bossName: 'Tiểu Linh ☠', bossLv: 18, bossHp: 7000, bossAtk: 90, bossTint: 0xb6ffb6,
+    { id: 'boss2', type: 'boss', ch: 'Chương 2 · Ấn Rừng', map: 'rung-the', spot: 2, bossChar: 'tieu-linh', bossName: 'Tiểu Linh ☠', bossLv: 18, bossHp: 7000, bossAtk: 90, bossTint: 0xb6ffb6,
       title: 'Giải thoát Tiểu Linh ở Gốc Cổ Thụ', reward: { exp: 4000 },
       done: [[null, 'Hồ lô trên tay Tiểu Linh vỡ, khói xanh tan ra. Cô bé ngã xuống, rồi mở mắt.'],
         [null, '"Rừng này thề giữ Ấn Mộc… Kẻ Trộm Ấn bắt nó nuốt người." Tiểu Linh trao lại mảnh Ấn Mộc cho Lăng Vân.']] },
-    { id: 'end2', type: 'done', ch: 'Chương 2 · Ấn Rừng', map: 2, title: 'Chương 2 hoàn tất · Chương 3: Ấn Biển sắp mở' },
+    { id: 'end2', type: 'done', ch: 'Chương 2 · Ấn Rừng', map: 'rung-the', title: 'Chương 2 hoàn tất · Chương 3: Ấn Biển sắp mở' },
   ];
 
   function css() {
@@ -77,12 +88,24 @@
     const h = sc.hero;
     const st = sc.story = { step: 0, prog: 0, skill: false, boss: null, talking: false, pending: null, warping: false, seen2: false };
     const cur = () => STEPS[st.step] || STEPS[STEPS.length - 1];
+    // map của bước: nói chuyện = trong thôn (0), đánh quái mặc định = Đồng Vân Sơn (1)
+    const mapOf = s => s.map != null ? s.map : (s.type === 'talk' ? 'thon-van-son' : 'dong-van-son');
 
     /* ---------- NPC ---------- */
     sc.npcs = [];
-    for (const [id, n] of Object.entries(MAP_ID === 1 ? NPCS : {})) {
-      const c = VILLAGE.c + n.dc, r = VILLAGE.r + n.dr, x = isoX(c, r), y = isoY(c, r);
-      const s = sc.add.image(x, y, n.img).setOrigin(0.5, 0.96).setDepth(y + 1).setScale(id === 'mo' ? 0.82 : 0.9);
+    for (const np of (MAPDEF.npcs || [])) {
+      const id = np.id, n = NPCS[id]; if (!n) continue;
+      let c = np.c, r = np.r;
+      // NPC phải đứng chỗ đi tới được: tìm ô trống gần nhất mà điểm nói chuyện (c+0.7, r+0.7) cũng trống
+      if (sc.obs && sc.obs.solid) {
+        const free = (a, b) => !sc.obs.solid(a, b) && !sc.obs.solid(a + 0.7, b + 0.7);
+        if (!free(c, r)) { let best = null, bd = 9;
+          for (let dc = -2; dc <= 2; dc += 0.25) for (let dr = -2; dr <= 2; dr += 0.25) {
+            const d = Math.hypot(dc, dr); if (d < bd && free(c + dc, r + dr)) { bd = d; best = [c + dc, r + dr]; } }
+          if (best) [c, r] = best; }
+      }
+      const x = isoX(c, r), y = isoY(c, r);
+      const s = sc.add.image(x, y, n.img).setOrigin(0.5, 0.96).setDepth(y + 1).setScale(id === 'mo' ? 0.82 : (n.img.startsWith('npc2-') ? 0.62 : 0.9));
       sc.add.image(x + 4, y + 2, 'shadow').setScale(0.6, 0.5).setDepth(-7.5e5);
       const lb = sc.add.text(x, y - s.displayHeight - 4, n.name, { font: 'bold 12px Segoe UI', color: '#9fe0ff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5, 1).setDepth(1e6);
       const mk = sc.add.text(x, y - s.displayHeight - 20, '!', { font: 'bold 26px Segoe UI', color: '#ffd23a', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5, 1).setDepth(1e6).setVisible(false);
@@ -138,7 +161,7 @@
     function onEnterStep() {
       const s = cur();
       HUD.toast('Nhiệm vụ: ' + s.title);
-      if (s.type === 'boss' && (s.map || 1) === MAP_ID) spawnBoss();
+      if (s.type === 'boss' && mapOf(s) === MAP_ID) spawnBoss();
       refreshPortals();
     }
 
@@ -236,7 +259,7 @@
     const arrow = sc.add.text(0, 0, '➤', { font: 'bold 30px Segoe UI', color: '#ffd23a', stroke: '#000', strokeThickness: 4 }).setOrigin(0.5).setDepth(1e6 + 2);
     function targetOf() {
       const s = cur();
-      if ((s.map || 1) !== MAP_ID || s.type === 'portal') { const p = portals.find(x => x.to === (s.map || 1) || s.type === 'portal'); return p && { c: p.c, r: p.r }; }
+      if (mapOf(s) !== MAP_ID || s.type === 'portal') { const want = s.type === 'portal' ? 'rung-the' : mapOf(s); const p = portals.find(x => x.to === want && x.cond()) || portals.find(x => x.to === 'thon-van-son') || portals[0]; return p && { c: p.c, r: p.r }; }
       if (s.type === 'talk') { const n = sc.npcs.find(x => x.id === s.npc); return n && { c: n.c, r: n.r }; }
       if (s.type === 'kill' || s.type === 'boss') { const p = SPOTS[s.spot]; return { c: p.c, r: p.r }; }
       return null;
@@ -256,19 +279,19 @@
     });
 
     /* ---------- Cổng dịch chuyển giữa map ---------- */
-    const portals = [];
+    const portals = sc.portals = [];
     function freeNear(c, r) {
       for (let k = 0; k < 60; k++) { const a = k * 2.4, d = k * 0.12, cc = c + Math.cos(a) * d, rr = r + Math.sin(a) * d;
         if (cc > 2 && rr > 2 && cc < N - 3 && rr < N - 3 && !sc.obs.solid(cc, rr)) return { c: cc, r: rr }; }
       return { c, r };
     }
-    function addPortal(c, r, label, to, cond) {
+    function addPortal(c, r, label, to, cond, dest) {
       const p = freeNear(c, r), x = isoX(p.c, p.r), y = isoY(p.c, p.r);
       const g1 = sc.add.ellipse(x, y, 130, 64, 0x55ccff, 0.25).setStrokeStyle(3, 0x9fe8ff, 0.95).setDepth(-6e5);
       const g2 = sc.add.ellipse(x, y - 46, 54, 96, 0x88ddff, 0.35).setDepth(y);
       sc.tweens.add({ targets: [g1, g2], alpha: { from: 0.45, to: 1 }, yoyo: true, repeat: -1, duration: 900 });
       const t = sc.add.text(x, y - 108, label, { font: 'bold 13px Segoe UI', color: '#bff0ff', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(1e6);
-      const P = { c: p.c, r: p.r, to, cond, parts: [g1, g2, t] }; portals.push(P); return P;
+      const P = { c: p.c, r: p.r, to, cond, dest, parts: [g1, g2, t] }; portals.push(P); return P;
     }
     const idxOf = id => STEPS.findIndex(x => x.id === id);
     function refreshPortals() { for (const p of portals) { const on = p.cond(); p.parts.forEach(o => o.setVisible(on)); } }
@@ -276,25 +299,29 @@
       if (st.warping || h.dead || st.talking) return;
       for (const p of portals) {
         if (!p.cond() || Math.hypot(h.c - p.c, h.r - p.r) > 1.0) continue;
-        if (p.to === 2 && cur().id === 'portal1') { sc.sfx('win'); st.step++; st.prog = 0; }
-        const dest = p.to === 2 ? MAPS[2].village : { c: 10, r: 10 };
-        save({ map: p.to, c: dest.c + 0.5, r: dest.r + 1.2 });
+        if (p.to === 'rung-the' && cur().id === 'portal1') { sc.sfx('win'); st.step++; st.prog = 0; }
+        const dest = p.dest;
+        save({ map: p.to, c: dest.c, r: dest.r });
         st.warping = true;
-        HUD.toast(p.to === 2 ? 'Đang vào Rừng Thề…' : 'Đang về Thôn Vân Sơn…');
+        HUD.toast('Truyền tống → ' + (MAPNAME[p.to] || p.to) + '…');
         sc.cameras.main.fadeOut(600, 0, 0, 0);
         setTimeout(() => location.reload(), 750);
         return;
       }
     }
-    if (MAP_ID === 1) { const s1 = SPOTS[1]; addPortal(Math.min(N - 5, s1.c + 9), Math.max(5, s1.r - 7), 'Cổng → Rừng Thề', 2, () => st.step >= idxOf('portal1')); }
-    else addPortal(VILLAGE.c - 2.5, VILLAGE.r + 1.5, 'Cổng → Thôn Vân Sơn', 1, () => true);
+    // ĐIỂM TRUYỀN TỐNG: đọc từ file map (maps/<id>/map.json -> portals)
+    const MAPNAME = { 'thon-van-son': 'Thôn Vân Sơn', 'dong-van-son': 'Đồng Vân Sơn', 'rung-the': 'Rừng Thề' };
+    for (const pt of (MAPDEF.portals || [])) {
+      const cond = pt.unlock ? () => st.step >= idxOf(pt.unlock) : () => true;
+      addPortal(pt.c, pt.r, pt.label || ('Truyền tống → ' + (MAPNAME[pt.to] || pt.to)), pt.to, cond, pt.dest);
+    }
 
     /* ---------- Lưu / nạp ---------- */
     function save(o) {
       if (st.warping) return;
       if (o && o.type) o = null;
       try {
-        localStorage.setItem(SAVE_KEY, JSON.stringify(Object.assign({ v: 1, map: MAP_ID, seen2: st.seen2, lv: h.lv, exp: h.exp, hp: Math.round(h.hp), mp: Math.round(h.mp),
+        localStorage.setItem(SAVE_KEY, JSON.stringify(Object.assign({ v: 1, mv: 1, map: MAP_ID, seen2: st.seen2, lv: h.lv, exp: h.exp, hp: Math.round(h.hp), mp: Math.round(h.mp),
           c: +h.c.toFixed(2), r: +h.r.toFixed(2), step: st.step, prog: st.prog, skill: st.skill, t: Date.now() }, o || {})));
       } catch (e) { }
     }
@@ -305,7 +332,7 @@
       const L = Math.max(1, d.lv | 0);
       Object.assign(h, { lv: L, exp: d.exp | 0, maxHp: 200 + 30 * (L - 1), maxMp: 80 + 8 * (L - 1), atk: 22 + 6 * (L - 1), def: 4 + (L - 1) });
       h.hp = Math.min(h.maxHp, Math.max(1, d.hp || h.maxHp)); h.mp = Math.min(h.maxMp, d.mp || h.maxMp);
-      if (!sc.obs.solid(d.c, d.r)) { h.c = d.c; h.r = d.r; }
+      if (d.mv && d.map === MAP_ID && !sc.obs.solid(d.c, d.r)) { h.c = d.c; h.r = d.r; }
       st.seen2 = !!d.seen2; st.step = Math.min(STEPS.length - 1, d.step | 0); st.prog = d.prog | 0; st.skill = !!d.skill || st.step > 2;
       return true;
     }
@@ -320,13 +347,13 @@
     const had = load();
     if (!st.skill && el('sk1')) el('sk1').classList.add('lock');
     renderQuest();
-    if (cur().type === 'boss' && (cur().map || 1) === MAP_ID) spawnBoss();
+    if (cur().type === 'boss' && mapOf(cur()) === MAP_ID) spawnBoss();
     if (had) HUD.toast('Đã nạp tiến độ · Lv' + h.lv);
     else say([
       [null, 'Lục Châu từng được sáu Ấn giữ yên. Đêm qua, Kẻ Trộm Ấn xé toạc Ấn Phố dưới Thôn Vân Sơn.'],
       [null, 'Tàn Ảnh — bóng của những người cũ — trồi lên khắp nơi. Lăng Vân tỉnh dậy, trên tay một vết Ấn đang sáng.'],
     ], () => HUD.toast('Nhiệm vụ: ' + cur().title));
-    if (MAP_ID === 2 && cur().id === 'kill_ln' && !st.seen2) {
+    if (MAP_ID === 'rung-the' && cur().id === 'kill_ln' && !st.seen2) {
       st.seen2 = true; save();
       say([[null, 'Rừng Thề. Cây ở đây từng thề giữ Ấn Mộc cho Lục Châu — nay lời thề chưa xong đã hoá đói.'],
         [null, 'Tàn Ảnh Lăng Nguyệt ẩn dưới tán cây, giương cung vào bất cứ ai bước qua.']], () => HUD.toast('Nhiệm vụ: ' + cur().title));

@@ -72,10 +72,10 @@
         const w = Math.max(0, 1 - d * (0.75 + 0.6 * nz)) * 1.55 * (0.5 + 0.6 * n1(u / K * 14 / N, v / K * 14 / N));
         const i = at(u, v); dirt[i] = Math.max(dirt[i], Math.min(1, w)); } }
     // quảng trường đá lát quanh làng
-    { const R = 3.3 * K;
+    if (village.plaza !== false) { const R = (village.plazaRadius || 5.6) * K;   // quảng trường theo cấu hình từng map
       for (let dy = -R * 1.2; dy <= R * 1.2; dy++) for (let dx = -R * 1.2; dx <= R * 1.2; dx++) {
         const u = village.c * K + dx, v = village.r * K + dy; if (u < 0 || v < 0 || u >= W || v >= W) continue;
-        const sq = Math.max(Math.abs(dx), Math.abs(dy)) / R, rd = Math.hypot(dx, dy) / R; const d = 0.55 * sq + 0.45 * rd + (n2(u / K * 40 / N, v / K * 40 / N) - 0.5) * 0.3;
+        const sq = Math.max(Math.abs(dx), Math.abs(dy)) / R, rd = Math.hypot(dx, dy) / R; const d = 0.90 * sq + 0.10 * rd + (n2(u / K * 40 / N, v / K * 40 / N) - 0.5) * 0.08;
         if (d < 1) stone[at(u, v)] = 1; } }
     // tông màu lớn: mảng cỏ đậm/nhạt
     for (let v = 0; v < W; v++) for (let u = 0; u < W; u++) tone[v * W + u] = 0.65 * n1(u / K * 14 / N, v / K * 14 / N) + 0.35 * n2(u / K * 40 / N, v / K * 40 / N);
@@ -136,17 +136,23 @@
 
   const KTTerrain = {
     init(scene, opt) {
-      const { N, TW, TH, village, spots, seed } = opt;
+      const { N, TW, TH, village, spots, seed, river } = opt;
       const t0 = performance.now();
       const m = buildMasks(N, village, spots, seed || 7);
       const pat = {}, ctx0 = document.createElement('canvas').getContext('2d');
-      for (const k of ['grass', 'dirt', 'stone']) pat[k] = ctx0.createPattern(scene.textures.get('g-' + k).getSourceImage(), 'repeat');
+      for (const k of ['grass', 'dirt', 'stone']) {
+        pat[k] = ctx0.createPattern(scene.textures.get('g-' + k).getSourceImage(), 'repeat');
+        // Texture mặt đất phải cùng phép chiếu với map: hai trục chéo ±26.565°.
+        // Chỉ chiếu CHẤT LIỆU, không ép camera/sprite/UI. Anchor toàn world tránh seam giữa chunk.
+        const a = Math.SQRT1_2;
+        pat[k].setTransform(new DOMMatrix([a, a * TH / TW, -a, a * TH / TW, 0, 0]));
+      }
       const edge = makeEdge(N);
       // edge canvas đặt lệch -pad ô -> bọc vào canvas có gốc trùng mask bằng cách vẽ với offset
       const edgeCv = document.createElement('canvas'); edgeCv.width = edge.cv.width; edgeCv.height = edge.cv.height;
       edgeCv.getContext('2d').drawImage(edge.cv, 0, 0);
       let tmpCv = null;
-      const T = this.T = { N, TW, TH, m, pat, scene, chunks: new Map(), stat: { built: 0, ms: 0 },
+      const T = this.T = { N, TW, TH, village, river, m, pat, scene, chunks: new Map(), stat: { built: 0, ms: 0 },
         tmp: (w, h) => { if (!tmpCv || tmpCv.width !== w || tmpCv.height !== h) { tmpCv = document.createElement('canvas'); tmpCv.width = w; tmpCv.height = h; } return tmpCv; },
         edge: { width: 0 } };
       // edge cần lệch -pad ô: tạo canvas phụ có gốc ô(0,0) bằng drawImage âm
@@ -180,6 +186,44 @@
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(t, 0, 0); ctx.restore(); };
       layer(T.m.dirt, T.pat.dirt);
       layer(T.m.stone, T.pat.stone);
+      // Viền quảng trường và mạch đá đi đúng hai trục iso, không vẽ ô vuông theo màn hình.
+      // Isometric creek overlay: sand banks, blue-green water and shallow highlights. Collision stays in map.t.
+      if (T.river && T.river.points && T.river.points.length > 1) {
+        ctx.save(); ctx.setTransform(s, 0, 0, s, -s * ox, -s * oy);
+        const pts = T.river.points.map(p => [(p.c - p.r) * T.TW / 2, (p.c + p.r) * T.TH / 2]);
+        const trace = () => { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+          for (let i = 1; i < pts.length - 1; i++) { const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2; ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my); }
+          ctx.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]); };
+        const w = T.river.width || 1.1, bank = T.river.bank || 0.8, unit = T.TW * 0.5;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        trace(); ctx.strokeStyle = 'rgba(195,166,111,0.86)'; ctx.lineWidth = 2 * (w + bank) * unit; ctx.stroke();
+        trace(); ctx.strokeStyle = '#285963'; ctx.lineWidth = 2 * w * unit + 10; ctx.stroke();
+        const surface = ctx.createLinearGradient(0, pts[0][1] - w * unit, 0, pts[0][1] + w * unit);
+        surface.addColorStop(0, '#3b7883'); surface.addColorStop(0.48, '#5a9ba0'); surface.addColorStop(1, '#34707b');
+        trace(); ctx.strokeStyle = surface; ctx.lineWidth = 2 * w * unit; ctx.stroke();
+        // Irregular short cross-current glints, not a repeating dashed center line.
+        ctx.lineCap = 'round';
+        const rippleNoise = (a, b) => { const z = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return z - Math.floor(z); };
+        for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1], dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1, tx = dx / len, ty = dy / len, nx = -ty, ny = tx, count = Math.max(2, Math.floor(len / 92));
+          for (let j = 1; j <= count; j++) { const seed = (i + 1) * 113 + j * 47, u = j / (count + 1), off = (rippleNoise(seed, 3) - 0.5) * w * unit, x = a[0] + dx * u + nx * off, y = a[1] + dy * u + ny * off, l = 5 + rippleNoise(seed, 5) * 17;
+            ctx.beginPath(); ctx.moveTo(x - nx * l / 2, y - ny * l / 2); ctx.quadraticCurveTo(x + tx * 1.4, y + ty * 1.4, x + nx * l / 2, y + ny * l / 2);
+            ctx.strokeStyle = `rgba(211,240,226,${0.12 + rippleNoise(seed, 7) * 0.2})`; ctx.lineWidth = 0.8 + rippleNoise(seed, 9) * 1.4; ctx.stroke(); } }
+        ctx.restore();
+      }
+      if (T.village.plaza !== false) {
+      ctx.save(); ctx.setTransform(s, 0, 0, s, -s * ox, -s * oy);
+      const v = T.village, project = (c,r) => [(c-r)*T.TW/2,(c+r)*T.TH/2];
+      const corners = [[v.c-6,v.r-6],[v.c+6,v.r-6],[v.c+6,v.r+6],[v.c-6,v.r+6]].map(p=>project(...p));
+      ctx.beginPath(); corners.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p)); ctx.closePath();
+      ctx.strokeStyle='rgba(105,91,66,0.36)';ctx.lineWidth=5;ctx.stroke();
+      ctx.clip();ctx.strokeStyle='rgba(38,34,29,0.20)';ctx.lineWidth=1.1;
+      for(let q=-12;q<=12;q++) for(const axis of [0,1]) {
+        const a=axis?project(v.c-7,v.r+q*.5):project(v.c+q*.5,v.r-7);
+        const b=axis?project(v.c+7,v.r+q*.5):project(v.c+q*.5,v.r+7);
+        ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();
+      }
+      ctx.restore();
+      }
       T.drawEdge(ctx, s, ox, oy);
     },
     // gọi mỗi frame: dựng khối gần camera, tối đa 1 khối/frame (2 khi mới vào)
