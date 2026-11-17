@@ -902,7 +902,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       if (h.target && !h.target.dead) {
         const d = Math.hypot(h.target.c - h.c, h.target.r - h.r);
         if (d > 1.25) {
-          if (!busy) { this.playRun(h); this.stepToward(h, h.target.c, h.target.r, 2.1, dt); }
+          if (!busy) { this.stepToward(h, h.target.c, h.target.r, 2.1, dt); this.playRun(h); }
         } else {
           this.faceTo(h, h.target);
           if (time >= h.nextAtk && !busy) {
@@ -918,7 +918,10 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
           } else if (!busy) this.play(h, 'idle');
         }
       } else if (h.path && h.path.length) {
-        if (!busy) { this.playRun(h); if (this.stepToward(h, h.path[0].c, h.path[0].r, 2.3, dt)) h.path.shift(); }
+        if (!busy) {
+          if (this.stepToward(h, h.path[0].c, h.path[0].r, 2.3, dt)) h.path.shift();
+          this.playRun(h);
+        }
       } else {
         h.target = null; h.path = null;
         if (!busy) this.play(h, 'idle');
