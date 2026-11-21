@@ -152,7 +152,7 @@
     function complete() {
       const s = cur();
       giveExp(s.reward && s.reward.exp);
-      if (s.unlock === 'skill') { st.skill = true; HUD.toast('Lĩnh ngộ tuyệt kỹ: Song Thương Loạn Vân Phá'); el('sk1') && el('sk1').classList.remove('lock'); }
+      if (s.unlock === 'skill') { st.skill = true; sc.ultimateUnlocked = true; HUD.toast('Lĩnh ngộ tuyệt kỹ: Song Thương Loạn Vân Phá'); el('sk-ultimate') && el('sk-ultimate').classList.remove('lock'); }
       sc.sfx('win');
       st.step++; st.prog = 0;
       const after = () => { onEnterStep(); renderQuest(); save(); };
@@ -345,7 +345,8 @@
 
     /* ---------- Khởi động ---------- */
     const had = load();
-    if (!st.skill && el('sk1')) el('sk1').classList.add('lock');
+    sc.ultimateUnlocked = !!st.skill;
+    if (!st.skill && el('sk-ultimate')) el('sk-ultimate').classList.add('lock');
     renderQuest();
     if (cur().type === 'boss' && mapOf(cur()) === MAP_ID) spawnBoss();
     if (had) HUD.toast('Đã nạp tiến độ · Lv' + h.lv);

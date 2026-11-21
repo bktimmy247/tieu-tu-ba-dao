@@ -1,0 +1,75 @@
+{
+  "id": "van-son",
+  "name": "Thôn Vân Sơn",
+  "bgColor": "#0c1016",
+  "wind": {
+    "x": 0.1,
+    "y": 0,
+    "z": 0
+  },
+  "spawn": {
+    "col": 19,
+    "row": 33
+  },
+  "npcs": [
+    {
+      "id": "truong-lang",
+      "name": "Trưởng thôn",
+      "col": 21,
+      "row": 22
+    },
+    {
+      "id": "tho-ren",
+      "name": "Thợ rèn",
+      "col": 14,
+      "row": 13
+    },
+    {
+      "id": "duoc-su",
+      "name": "Dược sư",
+      "col": 25,
+      "row": 14
+    },
+    {
+      "id": "tieu-nhi",
+      "name": "Tiểu nhị",
+      "col": 19,
+      "row": 18
+    }
+  ],
+  "monsters": [
+    {
+      "id": "son-tac",
+      "name": "Sơn tặc",
+      "col": 30,
+      "row": 8,
+      "hp": 40,
+      "level": 2
+    },
+    {
+      "id": "son-tac",
+      "name": "Sơn tặc",
+      "col": 32,
+      "row": 10,
+      "hp": 40,
+      "level": 2
+    },
+    {
+      "id": "ho-ly",
+      "name": "Hồ ly",
+      "col": 7,
+      "row": 16,
+      "hp": 30,
+      "level": 3
+    }
+  ],
+  "triggers": [
+    {
+      "id": "cong-lang",
+      "type": "enter",
+      "col": 19,
+      "row": 36,
+      "message": "Bạn rời Thôn Vân Sơn qua cổng nam."
+    }
+  ]
+}

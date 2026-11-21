@@ -45,9 +45,11 @@
     if (document.getElementById('qcss')) return;
     const s = document.createElement('style'); s.id = 'qcss';
     s.textContent = `
-#qpanel{position:fixed;right:10px;top:76px;width:250px;z-index:60;font:13px/1.45 system-ui,Segoe UI,sans-serif;
+#qpanel{position:fixed;left:8px;top:88px;width:250px;z-index:60;font:13px/1.45 system-ui,Segoe UI,sans-serif;
   background:linear-gradient(180deg,rgba(28,22,16,.94),rgba(18,14,10,.94));border:1px solid #7a5c33;border-radius:10px;
   box-shadow:0 8px 24px rgba(0,0,0,.45);color:#f2e6cf;overflow:hidden}
+@media (max-height:520px){#qpanel{top:72px;width:230px;transform:scale(.82);transform-origin:top left}}
+@media (max-width:600px){#qpanel{width:210px;font-size:12px}}
 #qpanel.hide{display:none}
 #qpanel h4{margin:0;padding:8px 10px;font-size:13px;letter-spacing:.4px;background:rgba(122,92,51,.35);border-bottom:1px solid #7a5c33;display:flex;justify-content:space-between;align-items:center}
 #qpanel h4 b{color:#ffd98a;font-weight:700}

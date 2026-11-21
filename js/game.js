@@ -255,6 +255,20 @@ function dmgCalc(atk, def, coef) {
   return Math.max(1, Math.round((raw - red) * v));
 }
 
+/* ---------------- Bảng kỹ năng (một chỗ duy nhất) ----------------
+   Thêm kỹ năng mới = thêm 1 dòng ở đây + 1 nhánh trong cast() + 1 ô <div class="sk">
+   trong index.html. Không rải logic ra nhiều nơi. */
+const SKILLS = {
+  ultimate: { name: 'Tuyệt kỹ',  key: '1', cd: 6,  mp: 25, lv: 1 },
+  pot:      { name: 'Hồi máu',   key: '2', cd: 10, mp: 0,  lv: 1 },
+  chop:     { name: 'Trảm',      key: '3', cd: 4,  mp: 8,  lv: 1 },
+  dash:     { name: 'Tốc biến',  key: '4', cd: 8,  mp: 10, lv: 2 },
+  guard:    { name: 'Hộ thân',   key: '5', cd: 20, mp: 15, lv: 3 },
+  bind:     { name: 'Định thân', key: '6', cd: 15, mp: 20, lv: 4 },
+  combo:    { name: 'Liên hoàn', key: '7', cd: 12, mp: 18, lv: 5 },
+  auto:     { name: 'Tự đánh',   key: '8', cd: 0,  mp: 0,  lv: 1, toggle: true },
+};
+
 class Main extends Phaser.Scene {
   constructor() { super('main'); }
   preload() {
@@ -495,7 +509,7 @@ class Main extends Phaser.Scene {
     { const _t = this.add.text.bind(this.add); this.add.text = (x, y, t, st) => _t(x, y, t, Object.assign({ resolution: DPR }, st || {})); }
     this.sfx = k => { try { this.sound.play('sfx-' + k, { volume: k === 'voice' ? 0.6 : 0.45 }); const L = this.sfxLog || (this.sfxLog = []); L.push(k); if (L.length > 200) L.shift(); } catch (e) { } };
     this.hero = this.makeUnit('lang-van', VILLAGE.c, VILLAGE.r + 0.5, { hero: true, scale: 1.18 });
-    Object.assign(this.hero, { name: 'Lăng Vân', lv: 1, exp: 0, hp: 200, maxHp: 200, mp: 80, maxMp: 80, atk: 22, def: 4, path: null, target: null, auto: false, cdSkill: 0, cdPot: 0, nextAtk: 0 });
+    Object.assign(this.hero, { name: 'Lăng Vân', lv: 1, exp: 0, hp: 200, maxHp: 200, mp: 80, maxMp: 80, atk: 22, def: 4, path: null, target: null, auto: false, cdSkill: 0, cdPot: 0, cds: {}, guardUntil: 0, nextAtk: 0 });
     this.heroRing = this.add.image(0, 0, 'ringGold').setDepth(-7e5);
     this.mobs = [];
     SPOTS.forEach((s, si) => { for (let i = 0; i < s.n; i++) this.spawnMob(s, si); });
@@ -535,8 +549,10 @@ class Main extends Phaser.Scene {
     // input
     this.input.on('pointerdown', p => this.onClick(p.worldX, p.worldY));
     const kb = this.input.keyboard;
-    kb.on('keydown-A', () => this.toggleAuto()); kb.on('keydown-M', () => this.toggleOverview()); kb.on('keydown-ONE', () => this.castSkill()); kb.on('keydown-TWO', () => this.usePot());
-if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').onclick = () => { this.sfx('ui'); this.toggleAuto(); }; $('sk1').onclick = () => { this.sfx('ui'); this.castSkill(); }; $('skPot').onclick = () => { this.sfx('ui'); this.usePot(); };
+    kb.on('keydown-A', () => this.toggleAuto()); kb.on('keydown-M', () => this.toggleOverview());
+    ['ultimate', 'pot', 'chop', 'dash', 'guard', 'bind', 'combo', 'auto'].forEach((id, i) => kb.on('keydown-' + ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'][i], () => this.cast(id)));
+    if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview();
+    document.querySelectorAll('#skills .sk').forEach(el => { el.onclick = () => this.cast(el.dataset.sk); });
 
     this.drawMinimap();
     this.musicOn = true;
@@ -547,7 +563,6 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     const musBtn = document.getElementById('mus');
     if (musBtn) musBtn.onclick = () => this.toggleMusic();
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.regen() });
-    this.time.addEvent({ delay: 200, loop: true, callback: () => this.updateHud() });
     HUD.log(TOWN ? 'Đến ' + VILLAGE.name + '. Ra dã ngoại qua điểm truyền tống ở cổng Nam.' : 'Đến ' + VILLAGE.name + '. Điểm truyền tống về thôn ở ngay cạnh.');
     if (window.KTStory) { try { KTStory.install(this); } catch (e) { showErr('story: ' + e.message); } }
     if (window.KTLoot) { try { KTLoot.install(this); } catch (e) { showErr('loot: ' + e.message); } }
@@ -694,12 +709,38 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     for (const m of this.mobs) if (!m.dead) { m.spr.setVisible(true); if (m.shadow) m.shadow.setVisible(true); }
   }
 
-  toggleAuto() { this.hero.auto = !this.hero.auto; $('skAuto').classList.toggle('on', this.hero.auto); HUD.log(this.hero.auto ? 'Bật tự đánh' : 'Tắt tự đánh'); }
+  toggleAuto() { this.hero.auto = !this.hero.auto; const el = $('sk-auto') || $('skAuto'); if (el) el.classList.toggle('on', this.hero.auto); HUD.log(this.hero.auto ? 'Bật tự đánh' : 'Tắt tự đánh'); }
 
-  castSkill() {
-    const h = this.hero; if (h.dead || h.cdSkill > 0) return;
-    if (h.mp < 25) { HUD.log('Không đủ nội lực'); return; }
-    h.mp -= 25; h.cdSkill = 6;
+  /* ---------- kỹ năng: một cửa vào duy nhất ---------- */
+  cast(id) {
+    const h = this.hero, S = SKILLS[id];
+    if (!h || h.dead || !S) return false;
+    if (S.toggle) { this.toggleAuto(); return true; }
+    if (id === 'ultimate' && !this.ultimateUnlocked) { this.sfx('ui'); HUD.log('Chưa lĩnh ngộ tuyệt kỹ'); return false; }
+    if (h.lv < (S.lv || 1)) { this.sfx('ui'); HUD.log(S.name + ' mở ở cấp ' + S.lv); return false; }
+    if ((h.cds[id] || 0) > 0) return false;
+    if (h.mp < S.mp) { this.sfx('ui'); HUD.log('Không đủ nội lực (' + S.mp + ')'); return false; }
+    h.mp -= S.mp; h.cds[id] = S.cd; this.sfx('ui');
+    if (id === 'ultimate') this.castUltimate();
+    else if (id === 'pot') this.castPot();
+    else if (id === 'chop') this.castChop();
+    else if (id === 'dash') this.castDash();
+    else if (id === 'guard') this.castGuard();
+    else if (id === 'bind') this.castBind();
+    else if (id === 'combo') this.castCombo();
+    return true;
+  }
+
+  nearestMob(radius) {
+    const h = this.hero;
+    if (h.target && !h.target.dead) return h.target;
+    let best = null, bd = radius;
+    for (const m of this.mobs) { if (m.dead) continue; const d = Math.hypot(m.c - h.c, m.r - h.r); if (d < bd) { bd = d; best = m; } }
+    return best;
+  }
+
+  castUltimate() {
+    const h = this.hero;
     this.play(h, this.anims.get('lang-van:ultimate') ? 'ultimate' : 'basic', true); this.sfx('skill'); this.shake(6, 180); this.time.delayedCall(180, () => this.sfx('skill-vortex'));
     let n = 0;
     for (const m of this.mobs) if (!m.dead && Math.hypot(m.c - h.c, m.r - h.r) < 3.2) {
@@ -708,13 +749,71 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     }
     if (!n) this.vfx('skill', h);
     this.time.delayedCall(600, () => this.sfx('skill-hit'));
+    HUD.log('Tuyệt kỹ · ' + n + ' mục tiêu');
   }
 
-  usePot() {
-    const h = this.hero; if (h.dead || h.cdPot > 0) return;
-    h.cdPot = 10; const v = Math.round(h.maxHp * 0.4); h.hp = Math.min(h.maxHp, h.hp + v);
-    this.floatText(h, '+' + v, '#6aff7a');
+  castPot() {
+    const h = this.hero; const v = Math.round(h.maxHp * 0.4); h.hp = Math.min(h.maxHp, h.hp + v);
+    this.floatText(h, '+' + v, '#6aff7a'); this.sfx('passive');
+    HUD.log('Hồi máu +' + v);
   }
+
+  castChop() {
+    const h = this.hero, m = this.nearestMob(2.2);
+    this.play(h, 'basic', true); this.sfx('atk2');
+    if (!m) { this.vfx('skill', h); HUD.log('Trảm: không có mục tiêu'); return; }
+    this.faceTo(h, m);
+    this.time.delayedCall(260, () => { if (m.dead || h.dead) return; this.vfx('hit', m); this.damage(m, dmgCalc(h.atk, m.def, skillCoef(h.lv) * 1.45), true); });
+  }
+
+  castDash() {
+    const h = this.hero;
+    let dc = 0, dr = 0;
+    if (h.path && h.path.length) { dc = h.path[h.path.length - 1].c - h.c; dr = h.path[h.path.length - 1].r - h.r; }
+    else if (h.target && !h.target.dead) { dc = h.target.c - h.c; dr = h.target.r - h.r; }
+    else { dc = (h.face || 1); dr = 0; }
+    const d = Math.hypot(dc, dr) || 1, step = 0.22, maxDist = 2.4;
+    let moved = 0, c = h.c, r = h.r;
+    while (moved + step <= maxDist) {
+      const nc = c + dc / d * step, nr = r + dr / d * step;
+      if (this.obs.solid(nc, nr)) break;
+      c = nc; r = nr; moved += step;
+    }
+    if (moved <= 0) { this.vfx('skill', h); HUD.log('Tốc biến: bị chặn'); return; }
+    h.c = c; h.r = r; h.path = null;
+    this.place(h); this.heroRing.setPosition(h.spr.x, h.spr.y);
+    this.vfx('skill', h); this.sfx('skill'); this.shake(3, 90);
+    HUD.log('Tốc biến ' + moved.toFixed(1) + ' ô');
+  }
+
+  castGuard() {
+    const h = this.hero; h.guardUntil = performance.now() + 6000;
+    this.vfx('skill', h); this.floatText(h, 'Hộ thân', '#ffe08a'); this.sfx('passive');
+    HUD.log('Hộ thân: giảm 40% sát thương trong 6 giây');
+  }
+
+  castBind() {
+    const h = this.hero; let n = 0;
+    for (const m of this.mobs) if (!m.dead && Math.hypot(m.c - h.c, m.r - h.r) < 3.2) { m.stunUntil = performance.now() + 2500; this.vfx('hit', m); n++; }
+    this.vfx('skill', h); this.sfx('skill-vortex');
+    HUD.log(n ? 'Định thân ' + n + ' mục tiêu · 2,5 giây' : 'Định thân: không có mục tiêu');
+  }
+
+  castCombo() {
+    const h = this.hero, m = this.nearestMob(2.2);
+    this.play(h, 'basic', true); this.sfx('atk');
+    if (!m) { this.vfx('skill', h); HUD.log('Liên hoàn: không có mục tiêu'); return; }
+    this.faceTo(h, m);
+    for (let i = 0; i < 3; i++) this.time.delayedCall(200 + i * 230, () => {
+      if (m.dead || h.dead) return;
+      if (Math.hypot(m.c - h.c, m.r - h.r) > 3) return;
+      this.vfx('hit', m); this.damage(m, dmgCalc(h.atk, m.def, skillCoef(h.lv) * 0.62), i === 2);
+    });
+  }
+
+  /* tương thích chỗ gọi cũ */
+  castSkill() { return this.cast('ultimate'); }
+  usePot() { return this.cast('pot'); }
 
   vfx(k, u) {
     if (this.lowQ) return;
@@ -739,6 +838,7 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
 
   damage(u, dmg, crit) {
     if (u.dead) return;
+    if (u === this.hero && this.hero.guardUntil && performance.now() < this.hero.guardUntil) dmg = Math.max(1, Math.round(dmg * 0.6));
     u.hp -= dmg;
     if (u === this.hero) { this.floatText(u, '-' + dmg, '#ff6a5a'); this.sfx('hit'); this.shake(4, 120); }
     else { this.floatText(u, (crit ? 'Bạo kích ' : '') + dmg, crit ? '#ffd23a' : '#ffffff', crit); this.sfx('mob-hit'); this.shake(2, 80); u.provoked = true; if (u.state !== 'chase') { u.state = 'chase'; u.prey = this.hero; } }
@@ -889,8 +989,13 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
     this._tLast = nowMs;
     if (!(dt > 0) || dt > 0.5) dt = 0.016;   // khung hình đầu / tab vừa quay lại
     dt = Math.min(dt, 0.25);
+    // HUD cập nhật theo vòng lặp game (timer 200ms của Phaser bị trễ khi máy yếu,
+    // khiến số hồi chiêu đứng im vài nhịp). 10 lần/giây là đủ mượt cho thanh máu.
+    this._hudT = (this._hudT || 0) + dt;
+    if (this._hudT >= 0.1) { this._hudT = 0; this.updateHud(); }
     const h = this.hero;
-    h.cdSkill = Math.max(0, h.cdSkill - dt); h.cdPot = Math.max(0, h.cdPot - dt);
+    if (h.cds) { for (const k in h.cds) if (h.cds[k] > 0) h.cds[k] = Math.max(0, h.cds[k] - dt); }
+    h.cdSkill = (h.cds && h.cds.ultimate) || 0; h.cdPot = (h.cds && h.cds.pot) || 0;
     if (!h.dead) {
       // tự đánh: tìm quái gần nhất
       if (h.auto && !h.target && !h.path) {
@@ -941,6 +1046,13 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
       if (!this.overview && dh > 24) { m.spr.setVisible(false); if (m.shadow) m.shadow.setVisible(false); if (m.bar) m.bar.setVisible(false); if (m.label) m.label.setVisible(false); continue; }
       else { m.spr.setVisible(true); if (m.shadow) m.shadow.setVisible(true); }
       const busy = (m.clip === 'basic' || m.clip === 'hit') && (m.spr.anims && m.spr.anims.isPlaying);
+      // bị Định thân: đứng yên, không chạy AI
+      if (m.stunUntil && performance.now() < m.stunUntil) {
+        if (!busy) this.play(m, 'idle');
+        if (!m._stunMark) { m._stunMark = true; m.spr.setTint(0x9a7bff); }
+        this.place(m); continue;
+      }
+      if (m._stunMark) { m._stunMark = false; m.spr.clearTint(); if (m.spot && m.spot.tint !== 0xffffff) m.spr.setTint(m.spot.tint); }
       // Quái ôn hoà: chỉ truy đuổi khi bị hero đánh trúng (provoked, set trong damage()).
       // Boss cốt truyện giữ nguyên aggro theo khoảng cách; quái đang leash về bãi thì không bị kéo lại.
       if (m.state !== 'chase' && m.state !== 'return' && !h.dead && dh < 3.5 && m.isBoss) { m.state = 'chase'; }
@@ -987,10 +1099,37 @@ if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview(); $('skAuto').on
   updateHud() {
     const h = this.hero;
     HUD.bar('hp', h.hp, h.maxHp); HUD.bar('mp', h.mp, h.maxMp);
-    $('lv').textContent = 'Cấp ' + h.lv + ' · Công ' + h.atk;
+    const lvEl = $('lv'); if (lvEl) lvEl.textContent = 'Cấp ' + h.lv;
+    const badge = $('lvBadge'); if (badge && badge.textContent !== String(h.lv)) badge.textContent = h.lv;
+    const stEl = $('stats');
+    if (stEl) { const t = 'Công ' + h.atk + ' · Thủ ' + h.def + ((h.guardUntil && performance.now() < h.guardUntil) ? ' · Hộ thân' : ''); if (stEl.textContent !== t) stEl.textContent = t; }
     $('exp').firstChild.style.width = (h.exp / this.expNeed(h.lv) * 100) + '%';
-    $('sk1').querySelector('.cd').style.height = (h.cdSkill / 6 * 100) + '%';
-    $('skPot').querySelector('.cd').style.height = (h.cdPot / 10 * 100) + '%';
+    // 8 ô kỹ năng — cache DOM, chỉ ghi khi giá trị đổi
+    if (!this._slots) this._slots = Array.from(document.querySelectorAll('#skills .sk')).map(el => ({ el, id: el.dataset.sk, L: el.querySelector('.cd'), T: el.querySelector('.cdt') }));
+    for (const s of this._slots) {
+      const S = SKILLS[s.id]; if (!S || !s.L) continue;
+      const locked = h.lv < (S.lv || 1) || (s.id === 'ultimate' && !this.ultimateUnlocked);
+      if (s._locked !== locked) {
+        s._locked = locked; s.el.classList.toggle('lock', locked);
+        s.el.dataset.lock = locked ? (s.id === 'ultimate' && h.lv >= (S.lv || 1) ? 'Chưa ngộ' : 'Cấp ' + S.lv) : '';
+      }
+      const left = (h.cds && h.cds[s.id]) || 0;
+      const pct = S.cd > 0 ? Math.round(100 * left / S.cd) : 0;
+      if (s._pct !== pct) { s._pct = pct; s.L.style.height = pct + '%'; }
+      const txt = left > 0.15 ? String(Math.ceil(left)) : '';
+      if (s._txt !== txt) { s._txt = txt; s.T.textContent = txt; }
+      const noMana = !locked && S.mp > 0 && h.mp < S.mp;
+      if (s._noMana !== noMana) { s._noMana = noMana; s.el.classList.toggle('noMana', noMana); }
+    }
+    // khung mục tiêu
+    const tgt = $('tgt'), tm = (h.target && !h.target.dead) ? h.target : null;
+    if (tgt) {
+      const on = !!tm; if (this._tgtOn !== on) { this._tgtOn = on; tgt.classList.toggle('on', on); }
+      if (tm) {
+        if (this._tgtId !== tm) { this._tgtId = tm; $('tgtName').textContent = tm.name; $('tgtLv').textContent = 'Lv ' + tm.lv; }
+        HUD.bar('tgtHp', tm.hp, tm.maxHp);
+      } else this._tgtId = null;
+    }
     let area = VILLAGE.name, bd = Math.hypot(h.c - VILLAGE.c, h.r - VILLAGE.r) < 6 ? 0 : 1e9;
     for (const s of SPOTS) { const d = Math.hypot(h.c - s.c, h.r - s.r); if (d < 7 && d < bd) { bd = d; area = s.area; } }
     if (bd === 1e9) area = 'Ngoại ô Vân Sơn';

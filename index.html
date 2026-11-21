@@ -8,30 +8,57 @@
 <style>
   html,body{margin:0;height:100%;background:#0b0e13;overflow:hidden;font-family:"Segoe UI",Arial,sans-serif;user-select:none;-webkit-user-select:none}
   #game{position:fixed;inset:0}
-  .panel{position:fixed;z-index:5;background:linear-gradient(#2c1c0c,#160e06);border:1px solid #a07a34;box-shadow:0 2px 8px #000a;color:#f0d79a}
-  /* khung nhân vật */
-  #me{left:8px;top:8px;display:flex;gap:8px;padding:6px 10px 6px 6px;border-radius:10px}
-  #me .ava{width:54px;height:54px;border-radius:50%;border:2px solid #d4a64a;background:#3a2a18 url(assets/lt/portrait-lang-van.webp) center/cover}
-  #me .nm{font-size:13px;font-weight:700;color:#ffe6a8}
-  #me .lv{font-size:11px;color:#c9b07a}
-  .bar{position:relative;width:150px;height:11px;margin-top:4px;background:#000;border:1px solid #5a4420;border-radius:6px;overflow:hidden}
-  .bar i{position:absolute;inset:0;width:100%;border-radius:6px}
-  .bar span{position:absolute;inset:0;font-size:9px;line-height:11px;text-align:center;color:#fff;text-shadow:0 0 2px #000}
-  #hp i{background:linear-gradient(#ff6a5a,#b0201a)} #mp i{background:linear-gradient(#5ab0ff,#1a4ab0)}
-  /* bản đồ nhỏ */
-  #mini{right:8px;top:8px;width:170px;padding:4px;border-radius:10px;text-align:center}
-  #mini .area{font-size:12px;font-weight:700;color:#ffe6a8;margin:2px 0 4px}
-  #mapbox{position:relative;width:170px;height:100px;overflow:hidden;border-radius:6px;background:#06080a}
-  #mapbox canvas{position:absolute;left:50%;top:50%;width:112px;height:112px;margin:-56px 0 0 -56px;transform:scaleY(.6) rotate(45deg);image-rendering:pixelated}
+  .panel{position:fixed;z-index:5;background:linear-gradient(#2c1c0c,#160e06);border:1px solid #a07a34;box-shadow:0 2px 8px #000a,inset 0 0 0 1px #00000066;color:#f0d79a}
+  .panel::after{content:"";position:absolute;inset:3px;border:1px solid #a07a3433;border-radius:inherit;pointer-events:none}
+  /* ---------- khung nhân vật ---------- */
+  #me{left:8px;top:8px;display:flex;gap:9px;padding:7px 12px 7px 7px;border-radius:12px;align-items:center}
+  #me .ava{position:relative;width:58px;height:58px;border-radius:10px;border:2px solid #d4a64a;
+    background:#3a2a18 url(assets/lt/portrait-lang-van.webp) center/cover;box-shadow:0 0 8px #000a inset}
+  #me .ava b{position:absolute;right:-4px;bottom:-4px;background:#2a1a0a;border:1px solid #d4a64a;border-radius:8px;
+    font-size:10px;line-height:13px;padding:0 4px;color:#ffe6a8}
+  #me .info{display:flex;flex-direction:column;gap:2px;min-width:168px}
+  #me .row1{display:flex;align-items:baseline;gap:6px}
+  #me .nm{font-size:13.5px;font-weight:800;color:#ffe6a8;letter-spacing:.4px;text-shadow:0 0 6px #000}
+  #me .lv{font-size:10.5px;color:#c9b07a}
+  #me .stats{font-size:10px;color:#b8a074;letter-spacing:.2px}
+  .bar{position:relative;width:100%;height:12px;background:#0b0705;border:1px solid #5a4420;border-radius:7px;overflow:hidden}
+  .bar i{position:absolute;left:0;top:0;bottom:0;width:100%;border-radius:7px;transition:width .12s linear}
+  .bar span{position:absolute;inset:0;font-size:9.5px;line-height:12px;text-align:center;color:#fff;text-shadow:0 1px 2px #000,0 0 2px #000;letter-spacing:.3px}
+  #hp{height:13px} #hp i{background:linear-gradient(#ff7a64,#a81c16 70%,#7d120e)}
+  #mp{height:10px} #mp i{background:linear-gradient(#6cc0ff,#1a4ab0 70%,#123a8c)}
+  .bar.thin{height:5px} .bar.thin i{background:linear-gradient(90deg,#c9a03a,#ffe08a)}
+  /* ---------- khung mục tiêu ---------- */
+  #tgt{left:50%;top:6px;transform:translateX(-50%);width:min(280px,46vw);padding:5px 10px 7px;border-radius:10px;display:none}
+  #tgt.on{display:block}
+  #tgt .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:3px}
+  #tgt .nm{font-size:12.5px;font-weight:700;color:#ffd9a0;text-shadow:0 0 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #tgt .lv{font-size:10px;color:#c08a6a}
+  #tgtHp i{background:linear-gradient(#ff6a5a,#8e1810)}
+  /* ---------- bản đồ nhỏ ---------- */
+  #mini{right:8px;top:8px;width:206px;padding:5px 6px 6px;border-radius:12px;text-align:center}
+  #mini .area{font-size:12.5px;font-weight:800;color:#ffe6a8;margin:1px 0 4px;letter-spacing:.4px}
+  #mapbox{position:relative;width:194px;height:118px;overflow:hidden;border-radius:7px;background:#06080a;border:1px solid #6b5124}
+  #mapbox canvas{position:absolute;left:50%;top:50%;width:136px;height:136px;margin:-68px 0 0 -68px;transform:scaleY(.62) rotate(45deg);image-rendering:pixelated}
+  #mapbox .nd{position:absolute;left:4px;top:2px;font-size:9px;color:#e8c87c;opacity:.85;letter-spacing:1px}
   #mini .pos{font-size:10px;color:#c9b07a;margin-top:3px}
-  /* thanh kỹ năng */
-  #skills{left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:6px;padding:6px 8px;border-radius:12px}
-  .sk{position:relative;width:52px;height:52px;border-radius:8px;border:1px solid #d4a64a;background:#1d140a center/cover;cursor:pointer;color:#fff;font-size:10px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
-  .sk b{position:absolute;left:3px;top:1px;font-size:10px;color:#ffe6a8;text-shadow:0 0 2px #000}
-  .sk em{position:relative;font-style:normal;padding:1px 3px;background:#000a;border-radius:3px;margin-bottom:2px}
-  .sk .cd{position:absolute;left:0;right:0;bottom:0;height:0;background:#000b}
-  .sk.on{box-shadow:0 0 10px #ffd36a;border-color:#ffd36a}
-  /* kinh nghiệm */
+  /* ---------- thanh kỹ năng 8 ô ---------- */
+  #skills{left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:5px;padding:6px 8px;border-radius:12px}
+  .sk{position:relative;width:56px;height:56px;border-radius:8px;border:1px solid #d4a64a;background:#120c06 center/cover;cursor:pointer;
+    color:#fff;font-size:10px;overflow:hidden;box-shadow:inset 0 0 10px #000c}
+  .sk img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.96}
+  .sk b{position:absolute;left:3px;top:1px;font-size:10px;font-weight:800;color:#ffe6a8;text-shadow:0 0 3px #000,0 0 2px #000;z-index:3}
+  .sk .mp{position:absolute;right:3px;bottom:2px;font-size:9px;color:#9fd7ff;text-shadow:0 0 3px #000;z-index:3}
+  .sk em{position:absolute;left:0;right:0;bottom:0;text-align:center;font-style:normal;font-size:9.5px;padding:1px 0 2px;
+    background:linear-gradient(#0000,#000c);color:#ffe9b0;z-index:2}
+  .sk .cd{position:absolute;left:0;right:0;bottom:0;height:0;background:#000c;z-index:2;pointer-events:none}
+  .sk .cdt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#ffe9b0;text-shadow:0 0 4px #000;z-index:4;pointer-events:none}
+  .sk .cdt:empty{display:none}
+  .sk.on{box-shadow:0 0 12px #ffd36a,inset 0 0 10px #000c;border-color:#ffd36a}
+  .sk.lock{filter:grayscale(1) brightness(.42)}
+  .sk.lock::after{content:attr(data-lock);position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:9px;padding:1px 0 2px;background:#000c;color:#e0c78a;z-index:5}
+  .sk.noMana img{filter:saturate(.35) brightness(.62)}
+  .sk:active{transform:scale(.96)}
+  /* ---------- kinh nghiệm ---------- */
   #exp{position:fixed;left:0;right:0;bottom:0;height:5px;background:#000;z-index:6}
   #exp i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c9a03a,#ffe08a)}
   #log{position:fixed;left:8px;bottom:14px;z-index:5;width:min(300px,40vw);font-size:11px;color:#e8d9b5;text-shadow:0 0 3px #000;pointer-events:none}
@@ -41,8 +68,7 @@
   #start h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:2px;text-shadow:0 0 12px #c98a2a}
   #start p{margin:0;font-size:13px;color:#c9b07a;text-align:center;max-width:360px;line-height:1.5}
   #start button{font-size:18px;padding:10px 28px;border-radius:24px;border:1px solid #ffd36a;background:linear-gradient(#a8741e,#5a3a0c);color:#fff;cursor:pointer}
-  @media (max-width:600px){#mini{width:120px}#mapbox{width:120px;height:80px}#mapbox canvas{width:90px;height:90px;margin:-45px 0 0 -45px}.bar{width:110px}.sk{width:46px;height:46px}#log{display:none}}
-.sk.lock{filter:grayscale(1) brightness(.55)}
+  @media (max-width:600px){#mini{width:150px}#mapbox{width:138px;height:88px}#mapbox canvas{width:104px;height:104px;margin:-52px 0 0 -52px}#me .info{min-width:132px}.sk{width:46px;height:46px}#log{display:none}}
 
 /* ---- điều khiển cảm ứng ---- */
 #touch{position:fixed;inset:auto 0 0 0;height:190px;pointer-events:none;z-index:12;display:none}
@@ -60,9 +86,6 @@
 #cds .c b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#ffe9b0;font:bold 15px "Segoe UI"}
 #cds .c s{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.68);height:0}
 #cds .c em{position:absolute;left:0;right:0;bottom:2px;text-align:center;font:11px "Segoe UI";color:#ffd9a0;font-style:normal}
-#touch.off{display:none}
-
-
 
 /* ---- khung NGANG ---- */
 #rot{position:fixed;inset:0;z-index:60;display:none;background:#0b0e13;
@@ -72,12 +95,13 @@
 @keyframes rv{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
 @media (orientation:portrait) and (pointer:coarse){#rot{display:flex}}
 @media (orientation:landscape){
-  #mini{width:150px;top:6px;right:6px}
-  #mapbox{width:150px;height:86px}
-  #quest{max-width:250px;font-size:11.5px}
-  #me{transform:scale(.92);transform-origin:top left}
-  #skills{bottom:8px}
-  .sk{width:46px;height:46px}
+  #mini{width:168px;top:6px;right:6px}
+  #mapbox{width:156px;height:92px}
+  #mapbox canvas{width:112px;height:112px;margin:-56px 0 0 -56px}
+  #me{transform:scale(.9);transform-origin:top left;left:6px!important;top:6px!important}
+  #tgt{top:4px;width:min(240px,38vw)}
+  #skills{bottom:6px}
+  .sk{width:50px;height:50px}
   #joy{width:112px;height:112px;left:12px;bottom:12px}
   #joy i{width:48px;height:48px;margin:-24px 0 0 -24px}
   #atk{width:88px;height:88px;font-size:17px;right:16px;bottom:14px}
@@ -86,14 +110,13 @@
   #touch{height:150px}
 }
 
-
 /* QA pass: landscape gameplay priority */
-@media (orientation:landscape){
-  #me{transform:scale(.76);transform-origin:top left;left:6px!important;top:6px!important}
-  #quest{top:72px!important;left:8px!important;right:auto!important;max-width:190px!important;font-size:10px!important;opacity:.88}
+@media (orientation:landscape) and (max-height:520px){
+  #me{transform:scale(.72);transform-origin:top left;left:4px!important;top:4px!important}
+  #mini{transform:scale(.78);transform-origin:top right;top:4px!important;right:4px!important}
+  #tgt{transform:translateX(-50%) scale(.86);transform-origin:top center}
+  #skills{transform:translateX(-50%) scale(.82);transform-origin:bottom center;bottom:2px!important}
   #log{display:none!important}
-  #mini{top:6px!important;right:6px!important;transform:scale(.82);transform-origin:top right}
-  #skills{right:112px!important;bottom:8px!important;transform:scale(.86);transform-origin:bottom right}
   #touch{height:130px!important}
   #fps{left:8px!important;right:auto!important;top:auto!important;bottom:2px!important;font-size:10px!important;opacity:.62!important}
 }
@@ -103,27 +126,62 @@
 <body>
 <div id="rot"><div class="ic">📱</div><div><b>Xoay ngang máy</b><br><span style="opacity:.75;font-size:13px">Game thiết kế cho màn hình ngang</span></div></div>
 <div id="game"></div>
-<div id="me" class="panel"><div class="ava"></div><div><div class="nm">Lăng Vân</div><div class="lv" id="lv">Cấp 1</div>
-  <div class="bar" id="hp"><i></i><span></span></div><div class="bar" id="mp"><i></i><span></span></div></div></div>
-<div id="mini" class="panel"><div class="area" id="area">Thôn Vân Sơn</div><div id="mapbox"><canvas id="mm" width="56" height="56"></canvas><canvas id="mmd" width="56" height="56"></canvas></div><div class="pos" id="pos"></div></div>
-<div id="ovBtn" title="Xem toan map (M)">&#9635;</div>
-<div id="skills" class="panel">
-  <div class="sk" id="skAuto" style="background-image:url(assets/lt/icon-basic.webp)" title="Tự đánh (A)"><b>A</b><em>Tự đánh</em></div>
-  <div class="sk" id="sk1" title="Tuyệt kỹ (1)" style="background-image:url(assets/lt/icon-ultimate.webp)"><b>1</b><em>Tuyệt kỹ</em><div class="cd"></div></div>
-  <div class="sk" id="skPot" title="Hồi máu (2)"><b>2</b><em>Hồi máu</em><div class="cd"></div></div>
+
+<!-- khung nhân vật kiểu TIÊU TỬ BÁ ĐẠO -->
+<div id="me" class="panel">
+  <div class="ava"><b id="lvBadge">1</b></div>
+  <div class="info">
+    <div class="row1"><span class="nm">Lăng Vân</span><span class="lv" id="lv">Cấp 1</span></div>
+    <div class="bar" id="hp"><i></i><span></span></div>
+    <div class="bar" id="mp"><i></i><span></span></div>
+    <div class="stats" id="stats">Công 22 · Thủ 4</div>
+  </div>
 </div>
+
+<!-- khung mục tiêu -->
+<div id="tgt" class="panel">
+  <div class="row1"><span class="nm" id="tgtName">—</span><span class="lv" id="tgtLv"></span></div>
+  <div class="bar" id="tgtHp"><i></i><span></span></div>
+</div>
+
+<!-- bản đồ nhỏ -->
+<div id="mini" class="panel"><div class="area" id="area">Thôn Vân Sơn</div>
+  <div id="mapbox"><div class="nd">B</div><canvas id="mm" width="56" height="56"></canvas><canvas id="mmd" width="56" height="56"></canvas></div>
+  <div class="pos" id="pos"></div></div>
+<div id="ovBtn" title="Xem toan map (M)">&#9635;</div>
+
+<!-- 8 ô kỹ năng -->
+<div id="skills" class="panel" data-slots="8">
+  <div class="sk" id="sk-ultimate" data-key="1" data-sk="ultimate" title="Tuyệt kỹ (1) — 25 nội lực">
+    <img src="assets/lt/sk/ultimate.webp" alt=""><b>1</b><span class="mp">25</span><div class="cd"></div><div class="cdt"></div></div>
+  <div class="sk" id="sk-pot" data-key="2" data-sk="pot" title="Hồi máu (2)">
+    <img src="assets/lt/sk/pot.webp" alt=""><b>2</b><span class="mp">0</span><div class="cd"></div><div class="cdt"></div></div>
+  <div class="sk" id="sk-chop" data-key="3" data-sk="chop" title="Trảm (3) — 8 nội lực">
+    <img src="assets/lt/sk/chop.webp" alt=""><b>3</b><span class="mp">8</span><div class="cd"></div><div class="cdt"></div></div>
+  <div class="sk" id="sk-dash" data-key="4" data-sk="dash" data-lv="2" title="Tốc biến (4) — mở cấp 2">
+    <img src="assets/lt/sk/dash.webp" alt=""><b>4</b><span class="mp">10</span><div class="cd"></div><div class="cdt"></div></div>
+  <div class="sk" id="sk-guard" data-key="5" data-sk="guard" data-lv="3" title="Hộ thân (5) — mở cấp 3">
+    <img src="assets/lt/sk/guard.webp" alt=""><b>5</b><span class="mp">15</span><div class="cd"></div><div class="cdt"></div></div>
+  <div class="sk" id="sk-bind" data-key="6" data-sk="bind" data-lv="4" title="Định thân (6) — mở cấp 4">
+    <img src="assets/lt/sk/bind.webp" alt=""><b>6</b><span class="mp">20</span><div class="cd"></div><div class="cdt"></div></div>
+  <div class="sk" id="sk-combo" data-key="7" data-sk="combo" data-lv="5" title="Liên hoàn (7) — mở cấp 5">
+    <img src="assets/lt/sk/combo.webp" alt=""><b>7</b><span class="mp">18</span><div class="cd"></div><div class="cdt"></div></div>
+  <div class="sk" id="sk-auto" data-key="8" data-sk="auto" title="Tự đánh (8)">
+    <img src="assets/lt/icon-basic.webp" alt=""><b>8</b><span class="mp">—</span><div class="cd"></div><div class="cdt"></div></div>
+</div>
+
 <div id="fps" style="position:fixed;right:10px;top:6px;font:11px Segoe UI,Arial;color:#d9c79a;opacity:.85;z-index:60;pointer-events:none"></div>
-<div class="sk" id="mus" title="Bat/tat nhac"><b>M</b><em>Nhac</em></div>
+<div class="sk" id="mus" style="position:fixed;left:8px;bottom:26px;width:42px;height:42px;z-index:6" title="Bat/tat nhac"><b>M</b><em>Nhạc</em></div>
 <div id="exp"><i></i></div>
 <div id="log"></div>
 <div id="toast"></div>
-<div id="start"><h1>TIÊU TỬ BÁ ĐẠO</h1><p>Chạm vào đất để đi · chạm vào quái để đánh<br>A: tự đánh · 1: tuyệt kỹ · 2: hồi máu</p><button id="go">Vào game</button></div>
+<div id="start"><h1>TIÊU TỬ BÁ ĐẠO</h1><p>Chạm vào đất để đi · chạm vào quái để đánh<br>A: tự đánh · 1–7: kỹ năng · M: toàn map</p><button id="go">Vào game</button></div>
 <div id="err" style="display:none;position:fixed;left:0;right:0;bottom:0;max-height:45%;overflow:auto;background:#5a0f0f;color:#ffd9d9;font:12px/1.35 Consolas,monospace;padding:8px 10px;z-index:9999;white-space:pre-wrap"></div>
 <script src="vendor/phaser.min.js"></script>
 <script src="js/ground.js"></script>
 <script src="js/terrain.js?v=64"></script>
-<script src="js/quests.js?v=54"></script>
-<script>window.__KT_VER=60;</script>
+<script src="js/quests.js?v=55"></script>
+<script>window.__KT_VER=61;</script>
 <script src="js/loot.js?v=54"></script>
 <script src="js/story.js?v=54"></script>
 <script src="js/afk-battle.js?v=54"></script>
@@ -131,7 +189,7 @@
 <script src="js/appearance-resolver.js?v=55"></script>
 <script src="js/outfits.js?v=60"></script>
 <script src="js/reeds.js?v=59"></script>
-<script src="js/game.js?v=60"></script>
+<script src="js/game.js?v=61"></script>
 
 <div id="touch" style="display:none">
   <div id="joy"><i></i></div>
@@ -144,5 +202,3 @@
 
 </body>
 </html>
-
-
