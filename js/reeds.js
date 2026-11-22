@@ -89,7 +89,7 @@
         const bend = (Math.sin(t * k.sp + k.ph + k.x * 0.004) * 0.06 + Math.sin(t * k.sp * 2.3 + k.ph * 1.7) * 0.018) * gust + k.push;
         for (let i = 0; i <= SEG; i++) { const hN = 1 - i / SEG; k.pts[i].x = bend * Math.pow(hN, 1.7) * k.TH; }
         s.setDirty();
-        const behind = hy < k.y + 2 && Math.abs(hx - k.x) < k.w * 0.42 && hy > k.y - k.h * 0.95 - hh * 0.2;
+        const behind = Math.abs(hx - k.x) < k.w * 0.42 && Math.abs(k.y - hy) < k.h * 0.55;
         const ta = behind ? 0.32 : 1;
         if (k.a !== ta) { k.a += (ta - k.a) * 0.25; if (Math.abs(k.a - ta) < 0.02) k.a = ta; s.setAlpha(k.a); }
       }
