@@ -279,7 +279,36 @@ class Main extends Phaser.Scene {
     /* HD (2x) chỉ nạp cho các clip nhìn lâu: idle/run/basic. Clip combat ngắn dùng SD —
        tiết kiệm ~35 MB VRAM, quan trọng với iPhone/Safari (giới hạn bộ nhớ tab). */
     const HD_CLIPS = { idle: 1, run: 1, basic: 1 };
-    for (const [cid, ch] of Object.entries(M.chars)) { this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png'); for (const [cl, c] of Object.entries(ch.clips)) { this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h }); if (HD_CLIPS[cl]) this.load.spritesheet('hdx:' + cid + ':' + cl, HDLT + c.file, { frameWidth: c.w * 2, frameHeight: c.h * 2 }); } }
+    // Clip nào đã có bản HD (2x) thì KHÔNG nạp bản SD nữa — trước đây nạp cả hai,
+    // riêng idle/run/basic của 6 nhân vật là ~1,4 MB tải thừa. Danh sách HD lấy từ
+    // assets/lt-hd/index.json (tools/gen_hd_index.py sinh lúc build).
+    let hdSet = null;
+    try {
+      const x = new XMLHttpRequest(); x.open('GET', HDLT + 'index.json?v=' + (window.__KT_VER || 1), false); x.send(null);
+      if (x.status === 200 || x.status === 0) { const j = JSON.parse(x.responseText); if (j && Array.isArray(j.files)) hdSet = new Set(j.files); }
+    } catch (e) { hdSet = null; }
+    window.__KT_HD = hdSet ? hdSet.size : 0;
+    for (const [cid, ch] of Object.entries(M.chars)) {
+      this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png');
+      for (const [cl, c] of Object.entries(ch.clips)) {
+        const useHD = !!HD_CLIPS[cl] && (!hdSet || hdSet.has(c.file));
+        if (useHD) this.load.spritesheet('hdx:' + cid + ':' + cl, HDLT + c.file, { frameWidth: c.w * 2, frameHeight: c.h * 2 });
+        else this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h });
+      }
+    }
+    // HD thiếu/lỗi thì nạp bù bản SD rồi dựng lại animation — không để nhân vật mất hình
+    this.load.on('loaderror', (file) => {
+      const k = String((file && file.key) || '');
+      if (!k.startsWith('hdx:')) return;
+      const rest = k.slice(4), i = rest.lastIndexOf(':');
+      const cid = rest.slice(0, i), cl = rest.slice(i + 1);
+      const ch = M.chars[cid], c = ch && ch.clips && ch.clips[cl];
+      if (!c || this.textures.exists(cid + ':' + cl)) return;
+      console.warn('HD lỗi, dùng SD:', k);
+      this.load.spritesheet(cid + ':' + cl, LT + c.file, { frameWidth: c.w, frameHeight: c.h });
+      this.load.once('complete', () => this.makeAnims());
+      this.load.start();
+    });
     for (const k of ['npc-pho', 'npc-mo']) this.load.image(k, LT + k + '.webp');
     for (const k of ['grass', 'dirt', 'brick', 'stone']) this.load.image('tex-' + k, 'assets/tex/' + k + '.jpg');
     this.load.image('tex-ground-paint', 'assets/tex/ground-paint.webp');
@@ -320,7 +349,7 @@ class Main extends Phaser.Scene {
 
   makeAnims() {
     for (const [cid, ch] of Object.entries(this.M.chars)) for (const [cl, c] of Object.entries(ch.clips))
-      { const hk = 'hdx:' + cid + ':' + cl; const src = (this.textures.exists(hk) && this.textures.get(hk).frameTotal > 1) ? hk : ((this.textures.exists(cid + ':' + cl) && this.textures.get(cid + ':' + cl).frameTotal > 1) ? cid + ':' + cl : null); if (src) { const tx = this.textures.get(src); const total = tx.frameTotal - (tx.has('__BASE') ? 1 : 0); const end = Math.min(c.frames - 1, total - 1); const n = end + 1; const baseRate = (cl === 'run' ? 0.75 : 1) * 1000 / c.ms; /* sheet có thể ít frame hơn manifest: giữ NGUYÊN tổng thời lượng clip thay vì tua nhanh */ const rate = baseRate * (n / c.frames); this.anims.create({ key: cid + ':' + cl, frames: this.anims.generateFrameNumbers(src, { start: 0, end }), frameRate: rate, repeat: (cl === 'idle' || cl === 'run') ? -1 : 0 }); } }
+      { const hk = 'hdx:' + cid + ':' + cl; const src = (this.textures.exists(hk) && this.textures.get(hk).frameTotal > 1) ? hk : ((this.textures.exists(cid + ':' + cl) && this.textures.get(cid + ':' + cl).frameTotal > 1) ? cid + ':' + cl : null); if (src) { const tx = this.textures.get(src); const total = tx.frameTotal - (tx.has('__BASE') ? 1 : 0); const end = Math.min(c.frames - 1, total - 1); const n = end + 1; const baseRate = (cl === 'run' ? 0.75 : 1) * 1000 / c.ms; /* sheet có thể ít frame hơn manifest: giữ NGUYÊN tổng thời lượng clip thay vì tua nhanh */ const rate = baseRate * (n / c.frames); if (this.anims.exists(cid + ':' + cl)) this.anims.remove(cid + ':' + cl); this.anims.create({ key: cid + ':' + cl, frames: this.anims.generateFrameNumbers(src, { start: 0, end }), frameRate: rate, repeat: (cl === 'idle' || cl === 'run') ? -1 : 0 }); } }
     for (const [k, v] of Object.entries(this.M.vfx))
       if (this.textures.exists('vfx:' + k) && this.textures.get('vfx:' + k).frameTotal > 1) { const txv = this.textures.get('vfx:' + k); const tv = txv.frameTotal - (txv.has('__BASE') ? 1 : 0); this.anims.create({ key: 'vfx:' + k, frames: this.anims.generateFrameNumbers('vfx:' + k, { start: 0, end: Math.min(v.frames - 1, tv - 1) }), frameRate: 1000 / v.ms, repeat: 0 }); }
   }
