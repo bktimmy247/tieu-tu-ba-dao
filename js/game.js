@@ -289,7 +289,6 @@ class Main extends Phaser.Scene {
     } catch (e) { hdSet = null; }
     window.__KT_HD = hdSet ? hdSet.size : 0;
     for (const [cid, ch] of Object.entries(M.chars)) {
-      this.load.image('map-hd:' + cid, 'assets/map-hd-png/' + cid + '.png');
       for (const [cl, c] of Object.entries(ch.clips)) {
         const useHD = !!HD_CLIPS[cl] && (!hdSet || hdSet.has(c.file));
         if (useHD) this.load.spritesheet('hdx:' + cid + ':' + cl, HDLT + c.file, { frameWidth: c.w * 2, frameHeight: c.h * 2 });
