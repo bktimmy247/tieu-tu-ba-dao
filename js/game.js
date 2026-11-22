@@ -585,6 +585,9 @@ class Main extends Phaser.Scene {
     if ($('ovBtn')) $('ovBtn').onclick = () => this.toggleOverview();
     document.querySelectorAll('#skills .sk').forEach(el => { el.onclick = () => this.cast(el.dataset.sk); });
 
+    // canvas bản đồ nhỏ phải đúng bằng N ô của map — map 48 hay 56 đều phủ kín khung,
+    // không còn viền trống (trước đây canvas cố định 56×56).
+    { const a = $('mm'), b = $('mmd'); if (a && a.width !== N) { a.width = N; a.height = N; } if (b && b.width !== N) { b.width = N; b.height = N; } }
     this.drawMinimap();
     this.musicOn = true;
     try { this.music = this.sound.add(MAPCFG.bgm, { loop: true, volume: 0.35 }); } catch (e) { this.music = null; HUD.log('Không nạp được nhạc nền'); }
