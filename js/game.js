@@ -525,6 +525,13 @@ class Main extends Phaser.Scene {
       const x = isoX(c, r) + (isV ? 0 : (hash(c, r, 9) - 0.5) * 18), y = isoY(c, r) + (isV ? 0 : (hash(c, r, 11) - 0.5) * 8);
       const s = this.add.image(x, y + 6, p).setOrigin(0.5, p === 'v-fish' ? 0.5 : isV ? 0.86 : OH[p]).setDepth(y + 6);
       if (isV) s.setScale(1 / 1.5);   // ảnh làng giữ góc chéo: không lật, không co ngẫu nhiên
+      else if (p.startsWith('deco-')) {
+        // Lá rụng / hoa cỏ: ảnh gốc 300-500 px, nếu dùng scale 0,7 như cây thì một chiếc lá
+        // phủ 2-3 ô -> sai tỷ lệ. Ép về 0,26-0,42 ô (33-54 px) mới đúng cỡ chi tiết nền.
+        const target = TW * (0.26 + hash(c, r, 13) * 0.16);
+        s.setScale(target / Math.max(s.width, s.height));
+        if (hash(c, r, 17) < 0.5) s.setFlipX(true);
+      }
       else { s.setScale(0.72 + hash(c, r, 13) * 0.2); if (hash(c, r, 17) < 0.5) s.setFlipX(true); }
       // cổng làng: 2 cổng đối xứng 2 bên đường -> bỏ jitter + scale ngẫu nhiên, lật theo phía
       if (p === 'gate') { s.setPosition(isoX(c, r), isoY(c, r) + 6); s.setScale(0.82); s.setFlipX(r > VILLAGE.r ? c < VILLAGE.c : r < VILLAGE.r); }
