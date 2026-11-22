@@ -102,6 +102,14 @@
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
     const fillPat = (c, pat) => { c.save(); c.setTransform(s, 0, 0, s, -s * ox, -s * oy); c.fillStyle = pat; c.fillRect(ox, oy, w, h); c.restore(); };
     fillPat(ctx, T.pat.grass);
+    if (T.plate) {
+      // map có "plate" (sân đấu, kiểu thủy mặc): nền là MỘT bức vẽ liền phủ khắp hình thoi,
+      // không ghép ô — đúng cảm giác "nền tranh" trong tranh tham chiếu.
+      ctx.save(); maskTransform(ctx, s, ox, oy, T.TW, T.TH);
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.globalAlpha = 1; ctx.drawImage(T.plate, 0, 0, T.N * K, T.N * K);
+      ctx.restore();
+    } else {
     // mảng tông cỏ (overlay)
     ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.55; maskTransform(ctx, s, ox, oy, T.TW, T.TH); ctx.drawImage(T.m.tone, 0, 0); ctx.restore();
     const layer = (mask, pat, alpha) => {
@@ -113,6 +121,7 @@
       ctx.save(); ctx.globalAlpha = alpha; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(t, 0, 0); ctx.restore(); };
     layer(T.m.dirt, T.pat.dirt, 1);
     layer(T.m.stone, T.pat.stone, 1);
+    }
     // tối dần ra rìa hình thoi (rừng viền), ngoài hình thoi = màu rừng đậm
     ctx.save(); maskTransform(ctx, s, ox, oy, T.TW, T.TH); ctx.globalCompositeOperation = 'source-over';
     ctx.drawImage(T.edge, 0, 0); ctx.restore();
@@ -136,7 +145,7 @@
 
   const KTTerrain = {
     init(scene, opt) {
-      const { N, TW, TH, village, spots, seed, river } = opt;
+      const { N, TW, TH, village, spots, seed, river, plate } = opt;
       const t0 = performance.now();
       const m = buildMasks(N, village, spots, seed || 7);
       const pat = {}, ctx0 = document.createElement('canvas').getContext('2d');
@@ -153,6 +162,7 @@
       edgeCv.getContext('2d').drawImage(edge.cv, 0, 0);
       let tmpCv = null;
       const T = this.T = { N, TW, TH, village, river, m, pat, scene, chunks: new Map(), stat: { built: 0, ms: 0 },
+        plate: (plate && scene.textures.exists(plate)) ? scene.textures.get(plate).getSourceImage() : null,
         tmp: (w, h) => { if (!tmpCv || tmpCv.width !== w || tmpCv.height !== h) { tmpCv = document.createElement('canvas'); tmpCv.width = w; tmpCv.height = h; } return tmpCv; },
         edge: { width: 0 } };
       // edge cần lệch -pad ô: tạo canvas phụ có gốc ô(0,0) bằng drawImage âm
@@ -176,7 +186,14 @@
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
       const fillPat = (c, pat) => { c.save(); c.setTransform(s, 0, 0, s, -s * ox, -s * oy); c.fillStyle = pat; c.fillRect(ox, oy, w, h); c.restore(); };
       fillPat(ctx, T.pat.grass);
+      if (T.plate) {
+        // map có plate (sân đấu thủy mặc): nền là MỘT bức vẽ liền, không ghép ô
+        ctx.save(); maskTransform(ctx, s, ox, oy, T.TW, T.TH);
+        ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(T.plate, 0, 0, T.N * K, T.N * K); ctx.restore();
+      } else {
       ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.5; maskTransform(ctx, s, ox, oy, T.TW, T.TH); ctx.drawImage(T.m.tone, 0, 0); ctx.restore();
+      }
       const layer = (mask, pat) => {
         const t = T.tmp(cv.width, cv.height), x = t.getContext('2d');
         x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over'; x.globalAlpha = 1; x.clearRect(0, 0, t.width, t.height);
@@ -184,8 +201,7 @@
         maskTransform(x, s, ox, oy, T.TW, T.TH); x.drawImage(mask, 0, 0);
         x.globalCompositeOperation = 'source-in'; fillPat(x, pat); x.globalCompositeOperation = 'source-over';
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(t, 0, 0); ctx.restore(); };
-      layer(T.m.dirt, T.pat.dirt);
-      layer(T.m.stone, T.pat.stone);
+      if (!T.plate) { layer(T.m.dirt, T.pat.dirt); layer(T.m.stone, T.pat.stone); }
       // Viền quảng trường và mạch đá đi đúng hai trục iso, không vẽ ô vuông theo màn hình.
       // Isometric creek overlay: sand banks, blue-green water and shallow highlights. Collision stays in map.t.
       if (T.river && T.river.points && T.river.points.length > 1) {

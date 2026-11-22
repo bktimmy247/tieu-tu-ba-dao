@@ -319,6 +319,8 @@ class Main extends Phaser.Scene {
     for (const k of ['npc2-thuoc', 'npc2-ren', 'npc2-truong', 'npc2-taphoa', 'npc2-tuu']) this.load.image(k, LT + k + '.webp');
     for (let i = 0; i < 3; i++) this.load.image('reed-art' + i, 'assets/reeds/reed' + i + '.webp?v=59');
     this.load.json('walkmask', 'assets/data/walkmask.json');
+    // nền vẽ liền cho map đặc biệt (sân đấu): map.json -> plate
+    if (MAPDEF.plate) this.load.image('map-plate', MAPDEF.plate + '?v=' + (window.__KT_VER || 1));
     this.load.image('arena', 'assets/arena.jpg');
     if (this.textures.exists('vfx-boss') || true) this.load.image('vfx-boss', 'assets/lt/vfx-boss.webp');
     for (const [k, v] of Object.entries(M.vfx)) this.load.spritesheet('vfx:' + k, LT + v.file, { frameWidth: v.w, frameHeight: v.h });
@@ -398,7 +400,7 @@ class Main extends Phaser.Scene {
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
     // TOÀN MAP = 1 ảnh liền đã keystone (nghiêng vào trong), phủ đúng 7168x3584 world px
     // NỀN MỚI: 3 texture liền mép trộn theo địa hình, vẽ đúng độ phân giải gốc (js/terrain.js)
-    if (window.KTTerrain && this.textures.exists('g-grass')) { const tVil = TOWN ? Object.assign({}, VILLAGE, { plazaRadius: MAPDEF.plazaRadius || 5.6 }) : Object.assign({}, VILLAGE, { plaza: false }); const tSpots = TOWN ? (MAPDEF.streets || []) : SPOTS; this.terrain = KTTerrain.init(this, { N, TW, TH, village: tVil, spots: tSpots, seed: (MAPCFG.seed || 7), river: TOWN ? MAPDEF.river : null }); }
+    if (window.KTTerrain && this.textures.exists('g-grass')) { const tVil = TOWN ? Object.assign({}, VILLAGE, { plazaRadius: MAPDEF.plazaRadius || 5.6 }) : Object.assign({}, VILLAGE, { plaza: false }); const tSpots = TOWN ? (MAPDEF.streets || []) : SPOTS; this.terrain = KTTerrain.init(this, { N, TW, TH, village: tVil, spots: tSpots, seed: (MAPCFG.seed || 7), river: TOWN ? MAPDEF.river : null, plate: (MAPDEF.plate && this.textures.exists('map-plate')) ? 'map-plate' : null }); }
     if (false)
     if (this.textures.exists('sec0')) { const COLS = 3, ROWS = 3;
       const W0 = (N * TW) / COLS, H0 = (N * TH) / ROWS, X0 = -N * TW / 2;
@@ -530,7 +532,7 @@ class Main extends Phaser.Scene {
       this.props.push({ s, sh: this.add.image(x + (isV ? 0 : 10), y + 2, 'shadow').setScale(shs, shs * 0.9).setAlpha(isV ? 0.55 : 1).setDepth(-8e5), c, r, fish: p === 'v-fish', homeX: x, homeY: y + 6, phase: hash(c, r, 29) * Math.PI * 2 });
       nObj++;
     }
-    if (window.KTReeds && !TOWN) { try { KTReeds.init(this, { map, G, N, isoX, isoY, village: VILLAGE, spots: SPOTS, seed: MAPCFG.seed }); } catch (e) { console.error('reeds', e); } }
+    if (window.KTReeds && !TOWN) { try { const rd = MAPDEF.reeds || {}; KTReeds.init(this, { map, G, N, isoX, isoY, village: VILLAGE, spots: SPOTS, seed: MAPCFG.seed, count: rd.count || 90, centerClear: rd.centerClear || 9 }); } catch (e) { console.error('reeds', e); } }
     this.stats = { nGround, nDeco: map.deco.length, nObj, groundMs, groundTex: gt.w + '×' + gt.h, obstacles: this.obs.list.length };
 
     // nhân vật
@@ -541,6 +543,7 @@ class Main extends Phaser.Scene {
     this.heroRing = this.add.image(0, 0, 'ringGold').setDepth(-7e5);
     this.mobs = [];
     SPOTS.forEach((s, si) => { for (let i = 0; i < s.n; i++) this.spawnMob(s, si); });
+    if (MAPDEF.boss) this.spawnMapBoss(MAPDEF.boss);
     this.targetRing = this.add.image(0, 0, 'ringRed').setDepth(-7e5).setVisible(false);
 
     // camera
@@ -684,6 +687,26 @@ class Main extends Phaser.Scene {
     if (u.label) u.label.setColor('#d59bff');
     this.mobs.push(u);
     HUD.toast('Tinh Anh xuất hiện!'); this.vfx('skill', u); this.sfx('win');
+    return u;
+  }
+
+  spawnMapBoss(b) {
+    // Boss của map (map.json -> boss): một đơn vị to hơn, máu nhiều, đứng giữa sân đấu.
+    const nm = b.name || 'Bạch Xà Mẫu';
+    const u = this.makeUnit(b.char || 'bach-dien', b.c, b.r, { tint: b.tint });
+    const idleC = this.M.chars[b.char || 'bach-dien'].clips.idle;
+    const targetH = 120 * (b.scale || 1.55);
+    u.targetH = targetH;
+    u.spr.setScale(targetH / (idleC.h * 2));
+    u.shadow.setScale(0.55 * u.spr.scale, 0.5 * u.spr.scale);
+    Object.assign(u, {
+      name: nm, lv: b.lv || 16, maxHp: b.hp || 4200, hp: b.hp || 4200,
+      atk: b.atk || 52, def: b.lv || 16, home: { c: b.c, r: b.r },
+      state: 'idle', wait: 1, nextAtk: 0, isBoss: true,
+      spot: { c: b.c, r: b.r, boss: true, aggro: true, name: nm }
+    });
+    this.mobs.push(u);
+    HUD.log(nm + ' xuất hiện!');
     return u;
   }
 

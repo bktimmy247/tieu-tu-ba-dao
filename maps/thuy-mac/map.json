@@ -1,0 +1,29 @@
+{
+  "id": "thuy-mac",
+  "name": "Thủy Mạc",
+  "type": "arena",
+  "size": 34,
+  "seed": 20261122,
+  "bgm": "bgm-forest",
+  "center": { "c": 17, "r": 17 },
+  "plate": "assets/tex/thuy-mac-plate.webp",
+  "reeds": { "count": 130, "centerClear": 7.5 },
+  "tone": "water-ink",
+  "spots": [],
+  "structs": [["rock", 8, 9], ["rock", 26, 8], ["rock", 9, 27], ["rock", 27, 26], ["shrine", 17, 6], ["well", 6, 17]],
+  "npcs": [],
+  "portals": [
+    { "c": 17.5, "r": 31.5, "to": "rung-the", "dest": { "c": 6.5, "r": 44.5 } }
+  ],
+  "boss": {
+    "c": 17,
+    "r": 15,
+    "char": "bach-dien",
+    "name": "Bạch Xà Mẫu",
+    "lv": 16,
+    "hp": 4200,
+    "atk": 52,
+    "tint": 16855488,
+    "scale": 1.55
+  }
+}

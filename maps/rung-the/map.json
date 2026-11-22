@@ -1,123 +1,132 @@
 {
-  "id": "rung-the",
-  "name": "Rừng Thề",
-  "type": "field",
-  "size": 56,
-  "seed": 20261211,
-  "bgm": "bgm-forest",
-  "center": {
-    "c": 9,
-    "r": 44
+ "id": "rung-the",
+ "name": "Rừng Thề",
+ "type": "field",
+ "size": 56,
+ "seed": 20261211,
+ "bgm": "bgm-forest",
+ "center": {
+  "c": 9,
+  "r": 44
+ },
+ "walkmask": "assets/data/walkmask.json",
+ "spots": [
+  {
+   "c": 22,
+   "r": 36,
+   "char": "lang-nguyet",
+   "name": "Lăng Nguyệt",
+   "lv": 11,
+   "n": 15,
+   "aggro": true,
+   "area": "Rừng Tên Lạc",
+   "tint": 14680022
   },
-  "walkmask": "assets/data/walkmask.json",
-  "spots": [
-    {
-      "c": 22,
-      "r": 36,
-      "char": "lang-nguyet",
-      "name": "Lăng Nguyệt",
-      "lv": 11,
-      "n": 15,
-      "aggro": true,
-      "area": "Rừng Tên Lạc",
-      "tint": 14680022
-    },
-    {
-      "c": 35,
-      "r": 23,
-      "char": "lang-nguyet",
-      "name": "Lăng Nguyệt",
-      "lv": 14,
-      "n": 15,
-      "aggro": true,
-      "area": "Rừng Thề Sâu",
-      "tint": 13031679
-    },
-    {
-      "c": 44,
-      "r": 11,
-      "char": "lang-nguyet",
-      "name": "Lăng Nguyệt",
-      "lv": 16,
-      "n": 15,
-      "aggro": true,
-      "area": "Gốc Cổ Thụ"
-    },
-    {
-      "c": 14,
-      "r": 30,
-      "char": "tieu-linh",
-      "name": "Tiểu Linh",
-      "lv": 12,
-      "n": 15,
-      "aggro": true,
-      "area": "Bụi Linh",
-      "tint": 16770758
-    },
-    {
-      "c": 28,
-      "r": 42,
-      "char": "tieu-linh",
-      "name": "Tiểu Linh",
-      "lv": 15,
-      "n": 15,
-      "aggro": true,
-      "area": "Linh Sâu",
-      "tint": 16770758
-    },
-    {
-      "c": 40,
-      "r": 34,
-      "char": "lang-nguyet",
-      "name": "Lăng Nguyệt",
-      "lv": 17,
-      "n": 15,
-      "aggro": true,
-      "area": "Nguyệt Cao",
-      "tint": 13031679
-    },
-    {
-      "c": 18,
-      "r": 16,
-      "char": "lang-tieu",
-      "name": "Lăng Tiêu",
-      "lv": 13,
-      "n": 15,
-      "aggro": true,
-      "area": "Tiêu Rậm"
-    },
-    {
-      "c": 46,
-      "r": 28,
-      "char": "lang-tieu",
-      "name": "Lăng Tiêu",
-      "lv": 18,
-      "n": 15,
-      "aggro": true,
-      "area": "Tiêu Vực"
-    },
-    {
-      "c": 10,
-      "r": 20,
-      "char": "tinh-mac",
-      "name": "Tịnh Mặc",
-      "lv": 10,
-      "n": 15,
-      "aggro": true,
-      "area": "Mặc Đồng"
-    }
-  ],
-  "structs": [],
-  "npcs": [],
-  "portals": [
-    {
-      "c": 6.5,
-      "r": 45.5,
-      "to": "thon-van-son",
-      "dest": {
-        "c": 46.5,
-        "r": 28.5
-      }
-    }
-  ]
+  {
+   "c": 35,
+   "r": 23,
+   "char": "lang-nguyet",
+   "name": "Lăng Nguyệt",
+   "lv": 14,
+   "n": 15,
+   "aggro": true,
+   "area": "Rừng Thề Sâu",
+   "tint": 13031679
+  },
+  {
+   "c": 44,
+   "r": 11,
+   "char": "lang-nguyet",
+   "name": "Lăng Nguyệt",
+   "lv": 16,
+   "n": 15,
+   "aggro": true,
+   "area": "Gốc Cổ Thụ"
+  },
+  {
+   "c": 14,
+   "r": 30,
+   "char": "tieu-linh",
+   "name": "Tiểu Linh",
+   "lv": 12,
+   "n": 15,
+   "aggro": true,
+   "area": "Bụi Linh",
+   "tint": 16770758
+  },
+  {
+   "c": 28,
+   "r": 42,
+   "char": "tieu-linh",
+   "name": "Tiểu Linh",
+   "lv": 15,
+   "n": 15,
+   "aggro": true,
+   "area": "Linh Sâu",
+   "tint": 16770758
+  },
+  {
+   "c": 40,
+   "r": 34,
+   "char": "lang-nguyet",
+   "name": "Lăng Nguyệt",
+   "lv": 17,
+   "n": 15,
+   "aggro": true,
+   "area": "Nguyệt Cao",
+   "tint": 13031679
+  },
+  {
+   "c": 18,
+   "r": 16,
+   "char": "lang-tieu",
+   "name": "Lăng Tiêu",
+   "lv": 13,
+   "n": 15,
+   "aggro": true,
+   "area": "Tiêu Rậm"
+  },
+  {
+   "c": 46,
+   "r": 28,
+   "char": "lang-tieu",
+   "name": "Lăng Tiêu",
+   "lv": 18,
+   "n": 15,
+   "aggro": true,
+   "area": "Tiêu Vực"
+  },
+  {
+   "c": 10,
+   "r": 20,
+   "char": "tinh-mac",
+   "name": "Tịnh Mặc",
+   "lv": 10,
+   "n": 15,
+   "aggro": true,
+   "area": "Mặc Đồng"
+  }
+ ],
+ "structs": [],
+ "npcs": [],
+ "portals": [
+  {
+   "c": 6.5,
+   "r": 45.5,
+   "to": "thon-van-son",
+   "dest": {
+    "c": 46.5,
+    "r": 28.5
+   }
+  },
+  {
+   "c": 48.5,
+   "r": 9.5,
+   "to": "thuy-mac",
+   "dest": {
+    "c": 17.5,
+    "r": 29.5
+   }
+  }
+ ]
 }
