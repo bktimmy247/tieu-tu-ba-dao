@@ -97,6 +97,22 @@
     ctx.setTransform(s * TW / (2 * K), s * TH / (2 * K), -s * TW / (2 * K), s * TH / (2 * K), -s * ox, -s * oy);
   }
 
+  // Trải "plate" (nền vẽ liền) lên toàn bộ hình thoi. Map lớn trải 2×2 có lật gương xen kẽ
+  // thay vì phóng to 5 lần — giữ được nét cọ, không thành ảnh mờ.
+  function plateFill(ctx, T) {
+    const size = T.N * K;
+    if (T.N <= 36) { ctx.drawImage(T.plate, 0, 0, size, size); return; }
+    const half = size / 2;
+    for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
+      const flip = (i + j) % 2 === 1;
+      ctx.save();
+      ctx.translate(i * half + (flip ? half : 0), j * half);
+      if (flip) ctx.scale(-1, 1);
+      ctx.drawImage(T.plate, 0, 0, half, half);
+      ctx.restore();
+    }
+  }
+
   function compose(T, cv, ox, oy, w, h, s) {
     const ctx = cv.getContext('2d');
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
@@ -107,7 +123,7 @@
       // không ghép ô — đúng cảm giác "nền tranh" trong tranh tham chiếu.
       ctx.save(); maskTransform(ctx, s, ox, oy, T.TW, T.TH);
       ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-      ctx.globalAlpha = 1; ctx.drawImage(T.plate, 0, 0, T.N * K, T.N * K);
+      ctx.globalAlpha = 1; plateFill(ctx, T);
       ctx.restore();
     } else {
     // mảng tông cỏ (overlay)
@@ -187,12 +203,13 @@
       const fillPat = (c, pat) => { c.save(); c.setTransform(s, 0, 0, s, -s * ox, -s * oy); c.fillStyle = pat; c.fillRect(ox, oy, w, h); c.restore(); };
       fillPat(ctx, T.pat.grass);
       if (T.plate) {
-        // map có plate (sân đấu thủy mặc): nền là MỘT bức vẽ liền, không ghép ô
+        // map có plate (sân đấu thủy mặc): nền là MỘT bức vẽ liền, không ghép ô.
+        // Map lớn thì trải 2×2 có lật gương để không phải phóng to quá mức (giữ nét cọ).
         ctx.save(); maskTransform(ctx, s, ox, oy, T.TW, T.TH);
         ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(T.plate, 0, 0, T.N * K, T.N * K); ctx.restore();
+        plateFill(ctx, T); ctx.restore();
       } else {
-      ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.5; maskTransform(ctx, s, ox, oy, T.TW, T.TH); ctx.drawImage(T.m.tone, 0, 0); ctx.restore();
+        ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.5; maskTransform(ctx, s, ox, oy, T.TW, T.TH); ctx.drawImage(T.m.tone, 0, 0); ctx.restore();
       }
       const layer = (mask, pat) => {
         const t = T.tmp(cv.width, cv.height), x = t.getContext('2d');
