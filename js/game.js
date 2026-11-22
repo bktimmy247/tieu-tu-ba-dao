@@ -694,6 +694,20 @@ class Main extends Phaser.Scene {
   }
 
   bossAbility(m, h, dt, time) {
+    // Giai đoạn 2: máu còn ≤50% thì boss nổi giận — đổi màu, gọi 3 Tàn Ảnh, quét đuôi nhanh hơn
+    if (!m.phase2 && m.hp <= m.maxHp * 0.5) {
+      m.phase2 = true;
+      m.spr.setTint(0xb08cff);
+      HUD.toast(m.name + ' nổi giận — gọi Tàn Ảnh!');
+      HUD.log(m.name + ': giai đoạn 2');
+      this.shake(6, 220); this.sfx('skill-vortex');
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2;
+        const spot = { c: m.c + Math.cos(a) * 2.6, r: m.r + Math.sin(a) * 2.6, char: 'bach-dien', name: 'Tàn Ảnh Thủy', lv: Math.max(1, m.lv - 6), n: 1, tint: 0x9fd7ff, aggro: true };
+        if (!this.obs.solid(spot.c, spot.r)) this.spawnMob(spot, 0);
+      }
+      m.nextSlam = time + 1800;
+    }
     // Gợn nước dưới chân khi boss máu lớn còn sống (sân thủy mạc): vòng loang theo nhịp
     if (!m._ripple && m.spr) {
       m._ripple = this.time.addEvent({
@@ -709,7 +723,7 @@ class Main extends Phaser.Scene {
     if (!m.nextSlam) m.nextSlam = time + 3000;
     if (time < m.nextSlam) return;
     if (Math.hypot(h.c - m.c, h.r - m.r) > 5.5) { m.nextSlam = time + 900; return; }
-    m.nextSlam = time + 5200;
+    m.nextSlam = time + (m.phase2 ? 3900 : 5200);
     const c = m.c, r = m.r, R = 2.6;
     const gx = isoX(c, r), gy = isoY(c, r);
     this.play(m, 'basic', true); this.sfx('skill');
@@ -1081,6 +1095,15 @@ class Main extends Phaser.Scene {
     this._hudT = (this._hudT || 0) + dt;
     if (this._hudT >= 0.1) { this._hudT = 0; this.updateHud(); }
     const h = this.hero;
+    // sân đấu: khi boss đang truy đuổi thì giữ nhân vật trong vòng (muốn bỏ chạy cứ chạy ra mép,
+    // boss leash về chỗ cũ rồi vòng sẽ nhả) — không nhốt người chơi vĩnh viễn trong sân
+    if (MAPDEF.arenaRadius && this.mobs.some(m => m.isBoss && !m.dead && m.state === 'chase')) {
+      const adx = h.c - VILLAGE.c, adr = h.r - VILLAGE.r, AR = MAPDEF.arenaRadius, add = Math.hypot(adx, adr);
+      if (add > AR && add > 0.001) {
+        h.c = VILLAGE.c + adx / add * AR; h.r = VILLAGE.r + adr / add * AR;
+        this.place(h); if (this.heroRing) this.heroRing.setPosition(h.spr.x, h.spr.y);
+      }
+    }
     if (h.cds) { for (const k in h.cds) if (h.cds[k] > 0) h.cds[k] = Math.max(0, h.cds[k] - dt); }
     h.cdSkill = (h.cds && h.cds.ultimate) || 0; h.cdPot = (h.cds && h.cds.pot) || 0;
     if (!h.dead) {
