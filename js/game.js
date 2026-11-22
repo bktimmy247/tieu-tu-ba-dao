@@ -693,6 +693,39 @@ class Main extends Phaser.Scene {
     return u;
   }
 
+  bossAbility(m, h, dt, time) {
+    // Gợn nước dưới chân khi boss máu lớn còn sống (sân thủy mạc): vòng loang theo nhịp
+    if (!m._ripple && m.spr) {
+      m._ripple = this.time.addEvent({
+        delay: 820, loop: true, callback: () => {
+          if (m.dead || h.dead) return;
+          const ring = this.add.image(m.spr.x, m.spr.y + 6, 'ringGold').setDepth(-7e5).setScale(0.45).setAlpha(0.45);
+          this.tweens.add({ targets: ring, scale: 1.6, alpha: 0, duration: 950, onComplete: () => ring.destroy() });
+        }
+      });
+    }
+    if (m.dead || h.dead) return;
+    // Đòn quét đuôi: báo trước bằng vòng đỏ trên đất, 0,9 s sau mới gây sát thương diện rộng
+    if (!m.nextSlam) m.nextSlam = time + 3000;
+    if (time < m.nextSlam) return;
+    if (Math.hypot(h.c - m.c, h.r - m.r) > 5.5) { m.nextSlam = time + 900; return; }
+    m.nextSlam = time + 5200;
+    const c = m.c, r = m.r, R = 2.6;
+    const gx = isoX(c, r), gy = isoY(c, r);
+    this.play(m, 'basic', true); this.sfx('skill');
+    const ring = this.add.ellipse(gx, gy, R * TW * 1.05, R * TH * 1.05).setStrokeStyle(3, 0xff5540, 0.95).setDepth(-7.4e5).setAlpha(0.15);
+    this.tweens.add({ targets: ring, alpha: 1, duration: 750 });
+    this.time.delayedCall(900, () => {
+      ring.destroy();
+      if (m.dead) return;
+      const fx = this.add.image(gx, gy, 'vfx-boss').setDepth(2e6).setScale(0.9).setAlpha(0.95);
+      this.tweens.add({ targets: fx, alpha: 0, scale: 1.7, duration: 520, onComplete: () => fx.destroy() });
+      this.shake(5, 160); this.sfx('skill-vfx');
+      if (Math.hypot(h.c - c, h.r - r) <= R) this.damage(h, dmgCalc(m.atk, h.def, 1.35), true);
+      HUD.log(m.name + ': quét đuôi!');
+    });
+  }
+
   spawnMapBoss(b) {
     // Boss của map (map.json -> boss): một đơn vị to hơn, máu nhiều, đứng giữa sân đấu.
     const nm = b.name || 'Bạch Xà Mẫu';
@@ -1107,6 +1140,7 @@ class Main extends Phaser.Scene {
         this.place(m); continue;
       }
       if (m._stunMark) { m._stunMark = false; m.spr.clearTint(); if (m.spot && m.spot.tint !== 0xffffff) m.spr.setTint(m.spot.tint); }
+      if (m.isBoss) this.bossAbility(m, h, dt, time);
       // Quái ôn hoà: chỉ truy đuổi khi bị hero đánh trúng (provoked, set trong damage()).
       // Boss cốt truyện giữ nguyên aggro theo khoảng cách; quái đang leash về bãi thì không bị kéo lại.
       if (m.state !== 'chase' && m.state !== 'return' && !h.dead && dh < 3.5 && m.isBoss) { m.state = 'chase'; }
@@ -1128,6 +1162,7 @@ class Main extends Phaser.Scene {
         if (this.stepToward(m, m.home.c, m.home.r, 2.0, dt)) { m.state = 'idle'; m.hp = m.maxHp; m.provoked = false; }
       } else if (m.state === 'idle') {
         if (!busy) this.play(m, 'idle');
+        if (m.isBoss) { continue; }   // boss đứng giữa sân, không đi lang thang
         if (m.wait === undefined) m.wait = Math.random() * 10;   // lệch pha: không cả bãi cùng bước
         m.wait -= dt;
         if (m.wait <= 0) { // ~10 giây mới nhích 2-3 bước (0,5-0,8 ô), không rời chỗ quá 2,5 ô
