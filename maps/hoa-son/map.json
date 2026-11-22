@@ -1,0 +1,75 @@
+{
+ "id": "hoa-son",
+ "name": "Hỏa Sơn",
+ "type": "arena",
+ "size": 44,
+ "seed": 20261123,
+ "bgm": "bgm-field",
+ "center": {
+  "c": 22,
+  "r": 22
+ },
+ "plate": "assets/tex/hoa-son-plate.webp",
+ "tone": "ember",
+ "arenaRadius": 15,
+ "spots": [],
+ "structs": [
+  [
+   "rock",
+   8,
+   9
+  ],
+  [
+   "rock",
+   35,
+   9
+  ],
+  [
+   "rock",
+   9,
+   34
+  ],
+  [
+   "rock",
+   35,
+   33
+  ],
+  [
+   "rock",
+   22,
+   7
+  ],
+  [
+   "rock",
+   13,
+   28
+  ]
+ ],
+ "npcs": [],
+ "portals": [
+  {
+   "c": 22.5,
+   "r": 40.5,
+   "to": "rung-the",
+   "dest": {
+    "c": 46.5,
+    "r": 20.5
+   }
+  }
+ ],
+ "boss": {
+  "c": 22,
+  "r": 18,
+  "char": "tinh-mac",
+  "name": "Hỏa Kỳ Lân",
+  "lv": 22,
+  "hp": 6800,
+  "atk": 64,
+  "tint": 16747338,
+  "scale": 1.7
+ },
+ "reeds": {
+  "count": 0,
+  "centerClear": 6
+ }
+}

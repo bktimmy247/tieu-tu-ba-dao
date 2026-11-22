@@ -52,7 +52,7 @@
     };
     // rải theo BÃI (nhóm lớn), không rải đều — giống tranh tham chiếu
     let tries = 0;
-    const want = o.count || 90;
+    const want = (o.count === undefined || o.count === null) ? 90 : o.count;
     while (clumps.length < want && tries++ < 4000) {
       const c0 = 3 + R() * (N - 6), r0 = 3 + R() * (N - 6);
       if (!ok(c0 | 0, r0 | 0)) continue;

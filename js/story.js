@@ -63,6 +63,10 @@
       done: [[null, 'Vảy trắng tan thành hơi nước. Dưới lớp bùn, một mảnh đá xanh lạnh như nước hiện ra — mảnh Ấn Thủy.'],
         [null, 'Mặt hồ phẳng lại. Từ đáy vọng lên tiếng thứ ba: "Kẻ Trộm Ấn đã ăn hai mảnh. Ngươi còn bốn."']] },
     { id: 'end3', type: 'done', ch: 'Chương 3 · Ấn Thủy', map: 'thuy-mac', title: 'Chương 3 hoàn tất · Chương 4: Ấn Hỏa' },
+    { id: 'boss4', type: 'boss', ch: 'Chương 4 · Ấn Hỏa', map: 'hoa-son', useMapBoss: true, title: 'Hạ Hỏa Kỳ Lân ở Hỏa Sơn', reward: { exp: 9000 },
+      done: [[null, 'Sừng Kỳ Lân nứt ra, lửa tắt dần thành than. Trong tro, mảnh Ấn Hỏa đỏ như than hồng.'],
+        [null, 'Ba mảnh Ấn trong tay. Kẻ Trộm Ấn đã ăn ba mảnh — hắn sẽ còn mạnh hơn ở lần gặp tới.']] },
+    { id: 'end4', type: 'done', ch: 'Chương 4 · Ấn Hỏa', map: 'hoa-son', title: 'Chương 4 hoàn tất · Chương 5: Ấn Kim' },
   ];
 
   function css() {
@@ -325,7 +329,7 @@
       }
     }
     // ĐIỂM TRUYỀN TỐNG: đọc từ file map (maps/<id>/map.json -> portals)
-    const MAPNAME = { 'thon-van-son': 'Thôn Vân Sơn', 'dong-van-son': 'Đồng Vân Sơn', 'rung-the': 'Rừng Thề', 'thuy-mac': 'Thủy Mạc' };
+    const MAPNAME = { 'thon-van-son': 'Thôn Vân Sơn', 'dong-van-son': 'Đồng Vân Sơn', 'rung-the': 'Rừng Thề', 'thuy-mac': 'Thủy Mạc', 'hoa-son': 'Hỏa Sơn' };
     for (const pt of (MAPDEF.portals || [])) {
       const cond = pt.unlock ? () => st.step >= idxOf(pt.unlock) : () => true;
       addPortal(pt.c, pt.r, pt.label || ('Truyền tống → ' + (MAPNAME[pt.to] || pt.to)), pt.to, cond, pt.dest);
