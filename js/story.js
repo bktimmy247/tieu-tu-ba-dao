@@ -59,6 +59,10 @@
       done: [[null, 'Hồ lô trên tay Tiểu Linh vỡ, khói xanh tan ra. Cô bé ngã xuống, rồi mở mắt.'],
         [null, '"Rừng này thề giữ Ấn Mộc… Kẻ Trộm Ấn bắt nó nuốt người." Tiểu Linh trao lại mảnh Ấn Mộc cho Lăng Vân.']] },
     { id: 'end2', type: 'done', ch: 'Chương 2 · Ấn Rừng', map: 'rung-the', title: 'Chương 2 hoàn tất · Chương 3: Ấn Biển sắp mở' },
+    { id: 'boss3', type: 'boss', ch: 'Chương 3 · Ấn Thủy', map: 'thuy-mac', useMapBoss: true, title: 'Hạ Bạch Xà Mẫu ở Thủy Mạc', reward: { exp: 6000 },
+      done: [[null, 'Vảy trắng tan thành hơi nước. Dưới lớp bùn, một mảnh đá xanh lạnh như nước hiện ra — mảnh Ấn Thủy.'],
+        [null, 'Mặt hồ phẳng lại. Từ đáy vọng lên tiếng thứ ba: "Kẻ Trộm Ấn đã ăn hai mảnh. Ngươi còn bốn."']] },
+    { id: 'end3', type: 'done', ch: 'Chương 3 · Ấn Thủy', map: 'thuy-mac', title: 'Chương 3 hoàn tất · Chương 4: Ấn Hỏa' },
   ];
 
   function css() {
@@ -168,7 +172,14 @@
     /* ---------- Boss Bạch Diện ---------- */
     function spawnBoss() {
       if (st.boss && !st.boss.dead) return;
-      const s = cur(), si = s.spot != null ? s.spot : 2, sp = SPOTS[si];
+      const s = cur();
+      if (s.useMapBoss) {
+        // Boss do map.json sinh sẵn (game.js.spawnMapBoss) — chỉ cần gắn vào nhiệm vụ,
+        // KHÔNG tạo con thứ hai, và không vẽ thêm tấm 'arena' vì map đã có nền riêng.
+        const mb = (sc.mobs || []).find(m => m.isMapBoss && !m.dead);
+        if (mb) { st.boss = mb; return; }
+      }
+      const si = s.spot != null ? s.spot : 2, sp = SPOTS[si];
       const ch = s.bossChar || 'bach-dien', nm = s.bossName || 'Bạch Diện ☠', lv = s.bossLv || 10, hp = s.bossHp || 2200, atk = s.bossAtk || 46, tint = s.bossTint || 0xffb0b0;
       const spot = Object.assign({}, sp, { boss: true, aggro: true, name: nm, lv, tint });
       const u = sc.makeUnit(ch, sp.c, sp.r, { scale: 2.2, tint });
@@ -184,6 +195,7 @@
     let ring = null;
     function bossTick(time) {
       const b = st.boss; if (!b || b.dead || h.dead) return;
+      if (b.isMapBoss) return;   // boss của map đã có chiêu riêng trong game.js (quét đuôi + gợn nước)
       if (b.cid === 'tieu-linh' && time > (b.nextHeal || 0) && b.state === 'chase') { b.nextHeal = time + 9000; if (b.hp < b.maxHp * 0.9) { const v = Math.round(b.maxHp * 0.06); b.hp = Math.min(b.maxHp, b.hp + v); sc.floatText(b, '+' + v, '#7dff8a', true); HUD.toast('Tiểu Linh hồi máu bằng hồ lô — dồn sát thương!'); } }
       const d = Math.hypot(b.c - h.c, b.r - h.r);
       if (d > 7 || time < b.nextSlam) return;
@@ -261,7 +273,10 @@
       const s = cur();
       if (mapOf(s) !== MAP_ID || s.type === 'portal') { const want = s.type === 'portal' ? 'rung-the' : mapOf(s); const p = portals.find(x => x.to === want && x.cond()) || portals.find(x => x.to === 'thon-van-son') || portals[0]; return p && { c: p.c, r: p.r }; }
       if (s.type === 'talk') { const n = sc.npcs.find(x => x.id === s.npc); return n && { c: n.c, r: n.r }; }
-      if (s.type === 'kill' || s.type === 'boss') { const p = SPOTS[s.spot]; return { c: p.c, r: p.r }; }
+      if (s.type === 'kill' || s.type === 'boss') {
+        if (s.useMapBoss) { const b = (sc.mobs || []).find(m => m.isMapBoss && !m.dead); return b ? { c: b.c, r: b.r } : null; }
+        const p = SPOTS[s.spot]; return p ? { c: p.c, r: p.r } : null;
+      }
       return null;
     }
 
@@ -310,7 +325,7 @@
       }
     }
     // ĐIỂM TRUYỀN TỐNG: đọc từ file map (maps/<id>/map.json -> portals)
-    const MAPNAME = { 'thon-van-son': 'Thôn Vân Sơn', 'dong-van-son': 'Đồng Vân Sơn', 'rung-the': 'Rừng Thề' };
+    const MAPNAME = { 'thon-van-son': 'Thôn Vân Sơn', 'dong-van-son': 'Đồng Vân Sơn', 'rung-the': 'Rừng Thề', 'thuy-mac': 'Thủy Mạc' };
     for (const pt of (MAPDEF.portals || [])) {
       const cond = pt.unlock ? () => st.step >= idxOf(pt.unlock) : () => true;
       addPortal(pt.c, pt.r, pt.label || ('Truyền tống → ' + (MAPNAME[pt.to] || pt.to)), pt.to, cond, pt.dest);

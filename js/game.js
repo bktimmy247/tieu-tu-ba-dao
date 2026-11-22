@@ -738,7 +738,7 @@ class Main extends Phaser.Scene {
     Object.assign(u, {
       name: nm, lv: b.lv || 16, maxHp: b.hp || 4200, hp: b.hp || 4200,
       atk: b.atk || 52, def: b.lv || 16, home: { c: b.c, r: b.r },
-      state: 'idle', wait: 1, nextAtk: 0, isBoss: true,
+      state: 'idle', wait: 1, nextAtk: 0, isBoss: true, isMapBoss: true,
       spot: { c: b.c, r: b.r, boss: true, aggro: true, name: nm }
     });
     this.mobs.push(u);
