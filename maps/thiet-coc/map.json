@@ -1,0 +1,30 @@
+{
+  "id": "thiet-coc",
+  "name": "Thiết Cốc",
+  "type": "arena",
+  "size": 46,
+  "seed": 20261124,
+  "bgm": "bgm-field",
+  "center": { "c": 23, "r": 23 },
+  "plate": "assets/tex/thiet-coc-plate.webp",
+  "tone": "steel",
+  "arenaRadius": 16,
+  "reeds": { "count": 0, "centerClear": 6 },
+  "spots": [],
+  "structs": [["rock", 9, 10], ["rock", 36, 9], ["rock", 10, 36], ["rock", 36, 35], ["rock", 23, 7], ["rock", 14, 30], ["rock", 33, 24]],
+  "npcs": [],
+  "portals": [
+    { "c": 23.5, "r": 42.5, "to": "hoa-son", "dest": { "c": 22.5, "r": 36.5 } }
+  ],
+  "boss": {
+    "c": 23,
+    "r": 19,
+    "char": "tieu-linh",
+    "name": "Kim Giáp Thú",
+    "lv": 28,
+    "hp": 8800,
+    "atk": 78,
+    "tint": 10468556,
+    "scale": 1.85
+  }
+}

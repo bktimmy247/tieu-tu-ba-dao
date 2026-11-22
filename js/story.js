@@ -67,6 +67,10 @@
       done: [[null, 'Sừng Kỳ Lân nứt ra, lửa tắt dần thành than. Trong tro, mảnh Ấn Hỏa đỏ như than hồng.'],
         [null, 'Ba mảnh Ấn trong tay. Kẻ Trộm Ấn đã ăn ba mảnh — hắn sẽ còn mạnh hơn ở lần gặp tới.']] },
     { id: 'end4', type: 'done', ch: 'Chương 4 · Ấn Hỏa', map: 'hoa-son', title: 'Chương 4 hoàn tất · Chương 5: Ấn Kim' },
+    { id: 'boss5', type: 'boss', ch: 'Chương 5 · Ấn Kim', map: 'thiet-coc', useMapBoss: true, title: 'Hạ Kim Giáp Thú ở Thiết Cốc', reward: { exp: 12000 },
+      done: [[null, 'Giáp sắt vỡ vụn như vỏ trấu. Mảnh Ấn Kim nằm trong lõi, nặng và lạnh hơn cả đá.'],
+        [null, 'Bốn mảnh Ấn. Kẻ Trộm Ấn đã ăn bốn — hắn không còn trốn sau bóng nữa.']] },
+    { id: 'end5', type: 'done', ch: 'Chương 5 · Ấn Kim', map: 'thiet-coc', title: 'Chương 5 hoàn tất · Chương 6: Ấn Mộc' },
   ];
 
   function css() {
@@ -329,7 +333,7 @@
       }
     }
     // ĐIỂM TRUYỀN TỐNG: đọc từ file map (maps/<id>/map.json -> portals)
-    const MAPNAME = { 'thon-van-son': 'Thôn Vân Sơn', 'dong-van-son': 'Đồng Vân Sơn', 'rung-the': 'Rừng Thề', 'thuy-mac': 'Thủy Mạc', 'hoa-son': 'Hỏa Sơn' };
+    const MAPNAME = { 'thon-van-son': 'Thôn Vân Sơn', 'dong-van-son': 'Đồng Vân Sơn', 'rung-the': 'Rừng Thề', 'thuy-mac': 'Thủy Mạc', 'hoa-son': 'Hỏa Sơn', 'thiet-coc': 'Thiết Cốc' };
     for (const pt of (MAPDEF.portals || [])) {
       const cond = pt.unlock ? () => st.step >= idxOf(pt.unlock) : () => true;
       addPortal(pt.c, pt.r, pt.label || ('Truyền tống → ' + (MAPNAME[pt.to] || pt.to)), pt.to, cond, pt.dest);
