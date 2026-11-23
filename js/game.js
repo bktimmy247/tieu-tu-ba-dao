@@ -405,6 +405,7 @@ class Main extends Phaser.Scene {
     // NỀN MỚI: 3 texture liền mép trộn theo địa hình, vẽ đúng độ phân giải gốc (js/terrain.js)
     if (window.KTTerrain && this.textures.exists('g-grass')) { const tVil = TOWN ? Object.assign({}, VILLAGE, { plazaRadius: MAPDEF.plazaRadius || 5.6 }) : Object.assign({}, VILLAGE, { plaza: false }); const tSpots = TOWN ? (MAPDEF.streets || []) : SPOTS; this.terrain = KTTerrain.init(this, { N, TW, TH, village: tVil, spots: tSpots, seed: (MAPCFG.seed || 7), river: TOWN ? MAPDEF.river : null, plate: (MAPDEF.plate && this.textures.exists('map-plate')) ? 'map-plate' : null, tiles: (MAPDEF.tileLayer && !/[?&]notile=1/.test(location.search)) ? { stone: ['tile-stone-a', 'tile-stone-b'].map(k => this.textures.get(k).getSourceImage()), dirt: ['tile-dirt-a', 'tile-dirt-b'].map(k => this.textures.get(k).getSourceImage()) } : null }); }
     if (!/[?&]noback=1/.test(location.search)) this.buildBackdrop();
+    this.buildElevation();
     if (false)
     if (this.textures.exists('sec0')) { const COLS = 3, ROWS = 3;
       const W0 = (N * TW) / COLS, H0 = (N * TH) / ROWS, X0 = -N * TW / 2;
@@ -668,8 +669,9 @@ class Main extends Phaser.Scene {
 
   place(u) {
     const x = isoX(u.c, u.r), y = isoY(u.c, u.r);
-    u.spr.setPosition(x, y).setDepth(y + 1).setFlipX(u.face < 0);
-    u.shadow.setPosition(x + 4, y + 2);
+    const lift = this.heightAt ? this.heightAt(u.c, u.r) * (this.hStep || 0) : 0;
+    u.spr.setPosition(x, y - lift).setDepth(y + 1).setFlipX(u.face < 0);
+    u.shadow.setPosition(x + 4, y + 2 - lift);
     if (u.bar) {
       const top = y - 100 * u.scale;
       // vẽ thanh máu ở toạ độ cục bộ, chỉ vẽ lại khi máu đổi (trước đây vẽ lại mỗi khung hình = tụt fps)
@@ -749,6 +751,55 @@ class Main extends Phaser.Scene {
       if (Math.hypot(h.c - c, h.r - r) <= R) this.damage(h, dmgCalc(m.atk, h.def, 1.35), true);
       HUD.log(m.name + ': quét đuôi!');
     });
+  }
+
+  // ---- ĐỊA HÌNH CAO THẤP (v1) ----
+  // Mỗi ô có độ cao 0..n. Vẽ mặt đứng (vách) + mặt trên, nhân vật đứng trên cao bị nâng
+  // sprite lên theo bậc, và chỉ lên/xuống được ở ô dốc. Depth vẫn theo y nên tự đúng thứ tự.
+  buildElevation() {
+    const E = MAPDEF.elevation; if (!E) return;
+    this.hStep = E.stepPx || 26;
+    this.hmap = new Uint8Array(N * N);
+    this.ramps = new Set((E.ramps || []).map(([c, r]) => r * N + c));
+    for (const z of (E.zones || [])) for (let r = z.r; r < z.r + z.h; r++) for (let c = z.c; c < z.c + z.w; c++)
+      if (c >= 0 && r >= 0 && c < N && r < N) this.hmap[r * N + c] = z.level || 1;
+    const g = this.add.graphics().setDepth(-8.6e5);
+    for (const z of (E.zones || [])) {
+      const lv = (z.level || 1) * this.hStep;
+      const A = [isoX(z.c, z.r), isoY(z.c, z.r)], B = [isoX(z.c + z.w, z.r), isoY(z.c + z.w, z.r)];
+      const C = [isoX(z.c + z.w, z.r + z.h), isoY(z.c + z.w, z.r + z.h)], D = [isoX(z.c, z.r + z.h), isoY(z.c, z.r + z.h)];
+      // mặt đứng phía nam (C-D) và phía đông (B-C)
+      g.fillStyle(0x4a3b32, 1);
+      g.beginPath(); g.moveTo(D[0], D[1] - lv); g.lineTo(C[0], C[1] - lv); g.lineTo(C[0], C[1]); g.lineTo(D[0], D[1]); g.closePath(); g.fillPath();
+      g.fillStyle(0x3a2e27, 1);
+      g.beginPath(); g.moveTo(C[0], C[1] - lv); g.lineTo(B[0], B[1] - lv); g.lineTo(B[0], B[1]); g.lineTo(C[0], C[1]); g.closePath(); g.fillPath();
+      // mặt trên: nền đá xám + viền sáng
+      g.fillStyle(0x6b5a4c, 1);
+      g.beginPath(); g.moveTo(A[0], A[1] - lv); g.lineTo(B[0], B[1] - lv); g.lineTo(C[0], C[1] - lv); g.lineTo(D[0], D[1] - lv); g.closePath(); g.fillPath();
+      g.lineStyle(2, 0x9c8a74, 0.8);
+      g.beginPath(); g.moveTo(A[0], A[1] - lv); g.lineTo(B[0], B[1] - lv); g.lineTo(C[0], C[1] - lv); g.lineTo(D[0], D[1] - lv); g.closePath(); g.strokePath();
+    }
+    // dốc: vẽ vệt sáng để người chơi thấy lối lên
+    g.fillStyle(0x8c7a62, 0.85);
+    for (const [c, r] of (E.ramps || [])) {
+      const x = isoX(c, r), y = isoY(c, r);
+      g.beginPath(); g.moveTo(x, y - this.hStep * 0.5); g.lineTo(x + TW / 2, y + TH / 2 - this.hStep * 0.5);
+      g.lineTo(x, y + TH - this.hStep * 0.5); g.lineTo(x - TW / 2, y + TH / 2 - this.hStep * 0.5); g.closePath(); g.fillPath();
+    }
+  }
+
+  heightAt(c, r) {
+    if (!this.hmap) return 0;
+    const cc = Math.round(c), rr = Math.round(r);
+    if (cc < 0 || rr < 0 || cc >= N || rr >= N) return 0;
+    return this.hmap[rr * N + cc];
+  }
+
+  canStep(c0, r0, c1, r1) {
+    const h0 = this.heightAt(c0, r0), h1 = this.heightAt(c1, r1);
+    if (h0 === h1) return true;
+    // chỉ lên/xuống được ở ô dốc
+    return this.ramps && (this.ramps.has(Math.round(r1) * N + Math.round(c1)) || this.ramps.has(Math.round(r0) * N + Math.round(c0)));
   }
 
   spawnMapBoss(b) {
@@ -1002,17 +1053,17 @@ class Main extends Phaser.Scene {
     const obs = this.obs;
     let moved = false;
     const stuckNow = obs.solid(u.c, u.r);   // đang chồng vật cản (lúc spawn / bị đẩy) → cho phép bước ra
-    if (!obs.solid(nc, nr) || stuckNow) { u.c = nc; u.r = nr; moved = true; }
+    if (!obs.solid(nc, nr) && this.canStep(u.c, u.r, nc, nr) || (stuckNow && !obs.solid(nc, nr))) { u.c = nc; u.r = nr; moved = true; }
     else { // trượt dọc vật cản theo từng trục, giống cảm giác đi sát mép nhà bên TIÊU TỬ BÁ ĐẠO
-      if (!obs.solid(nc, u.r)) { u.c = nc; moved = true; }
-      if (!obs.solid(u.c, nr)) { u.r = nr; moved = true; }
+      if (!obs.solid(nc, u.r) && this.canStep(u.c, u.r, nc, u.r)) { u.c = nc; moved = true; }
+      if (!obs.solid(u.c, nr) && this.canStep(u.c, u.r, u.c, nr)) { u.r = nr; moved = true; }
       if (!moved) {
         // vẫn kẹt: bước ngang (vuông góc hướng đi) để lách qua, KHÔNG bỏ waypoint
         const ux = -dr / d, uy = dc / d;
         const sx2 = u.c + ux * s, sy2 = u.r + uy * s;
         const tx2 = u.c - ux * s, ty2 = u.r - uy * s;
-        if (!obs.solid(sx2, sy2)) { u.c = sx2; u.r = sy2; moved = true; }
-        else if (!obs.solid(tx2, ty2)) { u.c = tx2; u.r = ty2; moved = true; }
+        if (!obs.solid(sx2, sy2) && this.canStep(u.c, u.r, sx2, sy2)) { u.c = sx2; u.r = sy2; moved = true; }
+        else if (!obs.solid(tx2, ty2) && this.canStep(u.c, u.r, tx2, ty2)) { u.c = tx2; u.r = ty2; moved = true; }
         if (!moved) return false;   // kẹt thật thì giữ waypoint, thử lại nhịp sau
       }
     }
