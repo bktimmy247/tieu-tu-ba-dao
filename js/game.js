@@ -404,6 +404,7 @@ class Main extends Phaser.Scene {
     // TOÀN MAP = 1 ảnh liền đã keystone (nghiêng vào trong), phủ đúng 7168x3584 world px
     // NỀN MỚI: 3 texture liền mép trộn theo địa hình, vẽ đúng độ phân giải gốc (js/terrain.js)
     if (window.KTTerrain && this.textures.exists('g-grass')) { const tVil = TOWN ? Object.assign({}, VILLAGE, { plazaRadius: MAPDEF.plazaRadius || 5.6 }) : Object.assign({}, VILLAGE, { plaza: false }); const tSpots = TOWN ? (MAPDEF.streets || []) : SPOTS; this.terrain = KTTerrain.init(this, { N, TW, TH, village: tVil, spots: tSpots, seed: (MAPCFG.seed || 7), river: TOWN ? MAPDEF.river : null, plate: (MAPDEF.plate && this.textures.exists('map-plate')) ? 'map-plate' : null, tiles: (MAPDEF.tileLayer && !/[?&]notile=1/.test(location.search)) ? { stone: ['tile-stone-a', 'tile-stone-b'].map(k => this.textures.get(k).getSourceImage()), dirt: ['tile-dirt-a', 'tile-dirt-b'].map(k => this.textures.get(k).getSourceImage()) } : null }); }
+    if (!/[?&]noback=1/.test(location.search)) this.buildBackdrop();
     if (false)
     if (this.textures.exists('sec0')) { const COLS = 3, ROWS = 3;
       const W0 = (N * TW) / COLS, H0 = (N * TH) / ROWS, X0 = -N * TW / 2;
@@ -1105,6 +1106,8 @@ class Main extends Phaser.Scene {
     this._hudT = (this._hudT || 0) + dt;
     if (this._hudT >= 0.1) { this._hudT = 0; this.updateHud(); }
     const h = this.hero;
+    // parallax: dải núi xa trôi chậm hơn map -> tạo chiều sâu
+    if (this._back) { const scx = this.cameras.main.scrollX; for (const l of this._back) l.g.x = -scx * l.k; }
     // sân đấu: khi boss đang truy đuổi thì giữ nhân vật trong vòng (muốn bỏ chạy cứ chạy ra mép,
     // boss leash về chỗ cũ rồi vòng sẽ nhả) — không nhốt người chơi vĩnh viễn trong sân
     if (MAPDEF.arenaRadius && this.mobs.some(m => m.isBoss && !m.dead && m.state === 'chase')) {
@@ -1216,6 +1219,40 @@ class Main extends Phaser.Scene {
   drawMinimap() {
     const cv = $('mm'), x = cv.getContext('2d'), col = k => G.GRASS.includes(k) ? '#4f7a2c' : G.WATER.includes(k) ? '#3a7aa8' : G.PATH.includes(k) ? '#b08a50' : k === G.WOOD ? '#8a5a2a' : k === G.SAND ? '#d8c088' : k === G.DIRT ? '#8a6a3c' : '#666';
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { x.fillStyle = this.map.obj[r][c] && this.map.obj[r][c] !== 'bush' ? '#2a4a18' : col(this.map.t[r][c]); x.fillRect(c, r, 1, 1); }
+  }
+
+  // NỀN XA + SƯƠNG: 3 dải núi mờ trôi chậm hơn map (parallax) + dải sương ở đỉnh màn hình.
+  // Đây là thứ tạo "chiều sâu" mà map phẳng không có: mắt thấy lớp xa đứng yên tương đối.
+  buildBackdrop() {
+    const W = this.scale.width, H = this.scale.height;
+    const layers = [];
+    const mk = (color, alpha, k, baseY, amp, step) => {
+      const g = this.add.graphics().setScrollFactor(0).setDepth(-1.2e6 + baseY * 0.0001).setAlpha(alpha);
+      g.fillStyle(color, 1);
+      g.beginPath(); g.moveTo(-W, H);
+      for (let x = -W; x <= W * 2; x += step) {
+        const y = baseY + Math.sin(x * 0.0037 + baseY * 0.03) * amp + Math.sin(x * 0.011 + baseY * 0.07) * amp * 0.4;
+        g.lineTo(x, y);
+      }
+      g.lineTo(W * 2, H); g.closePath(); g.fillPath();
+      layers.push({ g, k });
+    };
+    mk(0x1d2a33, 0.55, 0.05, H * 0.40, 24, 40);
+    mk(0x24333c, 0.45, 0.11, H * 0.50, 32, 30);
+    mk(0x2c3d46, 0.34, 0.18, H * 0.60, 42, 24);
+    const key = 'mist-band';
+    if (!this.textures.exists(key)) {
+      const cv = this.textures.createCanvas(key, 8, 256);
+      const cx = cv.getContext();
+      const grd = cx.createLinearGradient(0, 0, 0, 256);
+      grd.addColorStop(0, 'rgba(214,222,226,0.55)');
+      grd.addColorStop(0.55, 'rgba(214,222,226,0.10)');
+      grd.addColorStop(1, 'rgba(214,222,226,0)');
+      cx.fillStyle = grd; cx.fillRect(0, 0, 8, 256); cv.refresh();
+    }
+    const mist = this.add.image(W / 2, 0, key).setOrigin(0.5, 0).setDisplaySize(W, H * 0.32)
+      .setScrollFactor(0).setDepth(-1.18e6).setAlpha(0.32);
+    this._back = layers; this._mist = mist;
   }
 
   updateHud() {
