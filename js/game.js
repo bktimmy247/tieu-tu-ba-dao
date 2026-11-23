@@ -778,6 +778,36 @@ class Main extends Phaser.Scene {
       g.beginPath(); g.moveTo(A[0], A[1] - lv); g.lineTo(B[0], B[1] - lv); g.lineTo(C[0], C[1] - lv); g.lineTo(D[0], D[1] - lv); g.closePath(); g.fillPath();
       g.lineStyle(2, 0x9c8a74, 0.8);
       g.beginPath(); g.moveTo(A[0], A[1] - lv); g.lineTo(B[0], B[1] - lv); g.lineTo(C[0], C[1] - lv); g.lineTo(D[0], D[1] - lv); g.closePath(); g.strokePath();
+      // BỀ MẶT CÓ VÂN: phủ texture cỏ/đá lên mặt trên + hai mặt đứng, cắt bằng mask hình thoi
+      const texTop = this.textures.exists('g-grass') ? 'g-grass' : null;
+      const texWall = this.textures.exists('g-stone') ? 'g-stone' : null;
+      const pts = [[A[0], A[1] - lv], [B[0], B[1] - lv], [C[0], C[1] - lv], [D[0], D[1] - lv]];
+      if (texTop) {
+        const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+        const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+        const w = Math.max(...xs) - Math.min(...xs), hh = Math.max(...ys) - Math.min(...ys);
+        if (w > 4 && hh > 4) {
+          const ts = this.add.tileSprite(cx, cy, w, hh, texTop).setDepth(-8.55e5).setAlpha(0.75);
+          const mg = this.make.graphics({ add: false }); mg.fillStyle(0xffffff);
+          mg.fillPoints(pts.map(p => ({ x: p[0], y: p[1] })), true);
+          ts.setMask(mg.createGeometryMask());
+        }
+      }
+      if (texWall) {
+        for (const [p1, p2, dep] of [[D, C, -8.58e5], [C, B, -8.57e5]]) {
+          const xs = [p1[0], p2[0]], ys = [p1[1] - lv, p2[1] - lv, p1[1], p2[1]];
+          const cx = (xs[0] + xs[1]) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+          const w = Math.max(Math.abs(xs[1] - xs[0]), 6), hh = Math.max(Math.max(...ys) - Math.min(...ys), 6);
+          const tw = this.add.tileSprite(cx, cy, w, hh, texWall).setDepth(dep).setAlpha(0.85);
+          const mg = this.make.graphics({ add: false }); mg.fillStyle(0xffffff);
+          mg.fillPoints([{ x: p1[0], y: p1[1] - lv }, { x: p2[0], y: p2[1] - lv }, { x: p2[0], y: p2[1] }, { x: p1[0], y: p1[1] }], true);
+          tw.setMask(mg.createGeometryMask());
+        }
+      }
+      // bóng đổ ở chân vách
+      g.fillStyle(0x000000, 0.22);
+      g.beginPath(); g.moveTo(D[0], D[1] + 4); g.lineTo(C[0], C[1] + 4); g.lineTo(B[0], B[1] + 4);
+      g.lineTo(B[0] + 10, B[1] + 10); g.lineTo(C[0], C[1] + 12); g.lineTo(D[0] - 10, D[1] + 10); g.closePath(); g.fillPath();
     }
     // dốc: vẽ vệt sáng để người chơi thấy lối lên
     g.fillStyle(0x8c7a62, 0.85);
