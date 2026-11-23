@@ -161,7 +161,7 @@
 
   const KTTerrain = {
     init(scene, opt) {
-      const { N, TW, TH, village, spots, seed, river, plate } = opt;
+      const { N, TW, TH, village, spots, seed, river, plate, tiles } = opt;
       const t0 = performance.now();
       const m = buildMasks(N, village, spots, seed || 7);
       const pat = {}, ctx0 = document.createElement('canvas').getContext('2d');
@@ -179,6 +179,7 @@
       let tmpCv = null;
       const T = this.T = { N, TW, TH, village, river, m, pat, scene, chunks: new Map(), stat: { built: 0, ms: 0 },
         plate: (plate && scene.textures.exists(plate)) ? scene.textures.get(plate).getSourceImage() : null,
+        tiles: tiles || null,
         tmp: (w, h) => { if (!tmpCv || tmpCv.width !== w || tmpCv.height !== h) { tmpCv = document.createElement('canvas'); tmpCv.width = w; tmpCv.height = h; } return tmpCv; },
         edge: { width: 0 } };
       // edge cần lệch -pad ô: tạo canvas phụ có gốc ô(0,0) bằng drawImage âm
@@ -219,6 +220,32 @@
         x.globalCompositeOperation = 'source-in'; fillPat(x, pat); x.globalCompositeOperation = 'source-over';
         ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(t, 0, 0); ctx.restore(); };
       if (!T.plate) { layer(T.m.dirt, T.pat.dirt); layer(T.m.stone, T.pat.stone); }
+      // LỚP TILE CHI TIẾT: lát đá/gạch/đất nện đúng lưới iso lên trên nền, chỉ ở ô đường–sân.
+      // Tile là ảnh 128×64 (đúng TW×TH) nên ghép khít, không lệch mạch.
+      if (T.tiles) {
+        const ax = x => x * 2 * K / T.TW, by = y => (y + T.TH / 2) * 2 * K / T.TH;
+        let c0 = 1e9, c1 = -1e9, r0 = 1e9, r1 = -1e9;
+        for (const [px, py] of [[ox, oy], [ox + w, oy], [ox, oy + h], [ox + w, oy + h]]) {
+          const a = ax(px), b = by(py), qx = (a + b) / 2, qy = (b - a) / 2;
+          c0 = Math.min(c0, qx / K); c1 = Math.max(c1, qx / K);
+          r0 = Math.min(r0, qy / K); r1 = Math.max(r1, qy / K);
+        }
+        c0 = Math.max(0, Math.floor(c0) - 1); r0 = Math.max(0, Math.floor(r0) - 1);
+        c1 = Math.min(T.N - 1, Math.ceil(c1) + 1); r1 = Math.min(T.N - 1, Math.ceil(r1) + 1);
+        ctx.save(); maskTransform(ctx, s, ox, oy, T.TW, T.TH);
+        let nTile = 0;
+        for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+          // cùng logic groundAt() nhưng đọc trực tiếp mask (trong _compose, this = T)
+          const u = Math.round(c * K), v = Math.round(r * K), i = v * T.m.W + u;
+          const g = T.m.stoneArr[i] > 0.5 ? 'stone' : T.m.dirtArr[i] > 0.5 ? 'dirt' : 'grass';
+          const set = g === 'stone' ? T.tiles.stone : g === 'dirt' ? T.tiles.dirt : null;
+          if (!set) continue;
+          const img = set[((c * 7 + r * 13) % 2 + 2) % 2];
+          if (!img) continue;
+          ctx.drawImage(img, c * K, r * K, K, K); nTile++;
+        }
+        ctx.restore(); T.nTiles = (T.nTiles || 0) + nTile;
+      }
       // Viền quảng trường và mạch đá đi đúng hai trục iso, không vẽ ô vuông theo màn hình.
       // Isometric creek overlay: sand banks, blue-green water and shallow highlights. Collision stays in map.t.
       if (T.river && T.river.points && T.river.points.length > 1) {

@@ -1,118 +1,119 @@
 {
-  "id": "dong-van-son",
-  "name": "Đồng Vân Sơn",
-  "type": "field",
-  "size": 56,
-  "seed": 20261108,
-  "bgm": "bgm-field",
-  "center": {
-    "c": 10,
-    "r": 10
+ "id": "dong-van-son",
+ "name": "Đồng Vân Sơn",
+ "type": "field",
+ "size": 56,
+ "seed": 20261108,
+ "bgm": "bgm-field",
+ "center": {
+  "c": 10,
+  "r": 10
+ },
+ "walkmask": "assets/data/walkmask.json",
+ "spots": [
+  {
+   "c": 17,
+   "r": 27,
+   "char": "tinh-mac",
+   "name": "Tịnh Mặc",
+   "lv": 1,
+   "n": 15,
+   "aggro": false,
+   "area": "Bãi Tịnh Mặc"
   },
-  "walkmask": "assets/data/walkmask.json",
-  "spots": [
-    {
-      "c": 17,
-      "r": 27,
-      "char": "tinh-mac",
-      "name": "Tịnh Mặc",
-      "lv": 1,
-      "n": 15,
-      "aggro": false,
-      "area": "Bãi Tịnh Mặc"
-    },
-    {
-      "c": 28,
-      "r": 14,
-      "char": "tinh-mac",
-      "name": "Tịnh Mặc",
-      "lv": 3,
-      "n": 15,
-      "aggro": false,
-      "area": "Đồng Tịnh Mặc"
-    },
-    {
-      "c": 35,
-      "r": 19,
-      "char": "lang-tieu",
-      "name": "Lăng Tiêu",
-      "lv": 5,
-      "n": 15,
-      "aggro": true,
-      "area": "Rừng Lăng Tiêu"
-    },
-    {
-      "c": 20,
-      "r": 40,
-      "char": "lang-nguyet",
-      "name": "Lăng Nguyệt",
-      "lv": 7,
-      "n": 15,
-      "aggro": true,
-      "area": "Bờ Lăng Nguyệt"
-    },
-    {
-      "c": 43,
-      "r": 41,
-      "char": "bach-dien",
-      "name": "Bạch Điện",
-      "lv": 9,
-      "n": 15,
-      "aggro": true,
-      "area": "Đồi Bạch Điện"
-    },
-    {
-      "c": 44,
-      "r": 24,
-      "char": "lang-nguyet",
-      "name": "Lăng Nguyệt",
-      "lv": 11,
-      "n": 15,
-      "aggro": true,
-      "area": "Rừng Nguyệt"
-    },
-    {
-      "c": 33,
-      "r": 33,
-      "char": "tieu-linh",
-      "name": "Tiểu Linh",
-      "lv": 13,
-      "n": 15,
-      "aggro": true,
-      "area": "Gốc Tiểu Linh"
-    },
-    {
-      "c": 12,
-      "r": 44,
-      "char": "tieu-linh",
-      "name": "Tiểu Linh",
-      "lv": 15,
-      "n": 15,
-      "aggro": true,
-      "area": "Rừng Sâu"
-    },
-    {
-      "c": 46,
-      "r": 9,
-      "char": "lang-tieu",
-      "name": "Lăng Tiêu",
-      "lv": 17,
-      "n": 15,
-      "aggro": true,
-      "area": "Vực Lăng Tiêu"
-    }
-  ],
-  "structs": [],
-  "npcs": [],
-  "portals": [
-    {
-      "c": 7.5,
-      "r": 11.5,
-      "to": "thon-van-son",
-      "dest": {
-        "c": 28.5,
-        "r": 46.5
-      }
-    }
-  ]
+  {
+   "c": 28,
+   "r": 14,
+   "char": "tinh-mac",
+   "name": "Tịnh Mặc",
+   "lv": 3,
+   "n": 15,
+   "aggro": false,
+   "area": "Đồng Tịnh Mặc"
+  },
+  {
+   "c": 35,
+   "r": 19,
+   "char": "lang-tieu",
+   "name": "Lăng Tiêu",
+   "lv": 5,
+   "n": 15,
+   "aggro": true,
+   "area": "Rừng Lăng Tiêu"
+  },
+  {
+   "c": 20,
+   "r": 40,
+   "char": "lang-nguyet",
+   "name": "Lăng Nguyệt",
+   "lv": 7,
+   "n": 15,
+   "aggro": true,
+   "area": "Bờ Lăng Nguyệt"
+  },
+  {
+   "c": 43,
+   "r": 41,
+   "char": "bach-dien",
+   "name": "Bạch Điện",
+   "lv": 9,
+   "n": 15,
+   "aggro": true,
+   "area": "Đồi Bạch Điện"
+  },
+  {
+   "c": 44,
+   "r": 24,
+   "char": "lang-nguyet",
+   "name": "Lăng Nguyệt",
+   "lv": 11,
+   "n": 15,
+   "aggro": true,
+   "area": "Rừng Nguyệt"
+  },
+  {
+   "c": 33,
+   "r": 33,
+   "char": "tieu-linh",
+   "name": "Tiểu Linh",
+   "lv": 13,
+   "n": 15,
+   "aggro": true,
+   "area": "Gốc Tiểu Linh"
+  },
+  {
+   "c": 12,
+   "r": 44,
+   "char": "tieu-linh",
+   "name": "Tiểu Linh",
+   "lv": 15,
+   "n": 15,
+   "aggro": true,
+   "area": "Rừng Sâu"
+  },
+  {
+   "c": 46,
+   "r": 9,
+   "char": "lang-tieu",
+   "name": "Lăng Tiêu",
+   "lv": 17,
+   "n": 15,
+   "aggro": true,
+   "area": "Vực Lăng Tiêu"
+  }
+ ],
+ "structs": [],
+ "npcs": [],
+ "portals": [
+  {
+   "c": 7.5,
+   "r": 11.5,
+   "to": "thon-van-son",
+   "dest": {
+    "c": 28.5,
+    "r": 46.5
+   }
+  }
+ ],
+ "tileLayer": true
 }

@@ -319,6 +319,9 @@ class Main extends Phaser.Scene {
     for (const k of ['npc2-thuoc', 'npc2-ren', 'npc2-truong', 'npc2-taphoa', 'npc2-tuu']) this.load.image(k, LT + k + '.webp');
     for (let i = 0; i < 3; i++) this.load.image('reed-art' + i, 'assets/reeds/reed' + i + '.webp?v=59');
     this.load.json('walkmask', 'assets/data/walkmask.json');
+    // tile lát chi tiết (128×64, đúng lưới iso) — dùng cho lớp đường/sân
+    for (const k of ['tile-stone-a', 'tile-stone-b', 'tile-dirt-a', 'tile-dirt-b'])
+      this.load.image(k, 'assets/tex/' + k + '.webp?v=' + (window.__KT_VER || 1));
     // nền vẽ liền cho map đặc biệt (sân đấu): map.json -> plate
     if (MAPDEF.plate) this.load.image('map-plate', MAPDEF.plate + '?v=' + (window.__KT_VER || 1));
     this.load.image('arena', 'assets/arena.jpg');
@@ -400,7 +403,7 @@ class Main extends Phaser.Scene {
     this.add.image(gt.midX, gt.midY, gt.key).setDisplaySize(gt.W, gt.H).setDepth(-1e6);
     // TOÀN MAP = 1 ảnh liền đã keystone (nghiêng vào trong), phủ đúng 7168x3584 world px
     // NỀN MỚI: 3 texture liền mép trộn theo địa hình, vẽ đúng độ phân giải gốc (js/terrain.js)
-    if (window.KTTerrain && this.textures.exists('g-grass')) { const tVil = TOWN ? Object.assign({}, VILLAGE, { plazaRadius: MAPDEF.plazaRadius || 5.6 }) : Object.assign({}, VILLAGE, { plaza: false }); const tSpots = TOWN ? (MAPDEF.streets || []) : SPOTS; this.terrain = KTTerrain.init(this, { N, TW, TH, village: tVil, spots: tSpots, seed: (MAPCFG.seed || 7), river: TOWN ? MAPDEF.river : null, plate: (MAPDEF.plate && this.textures.exists('map-plate')) ? 'map-plate' : null }); }
+    if (window.KTTerrain && this.textures.exists('g-grass')) { const tVil = TOWN ? Object.assign({}, VILLAGE, { plazaRadius: MAPDEF.plazaRadius || 5.6 }) : Object.assign({}, VILLAGE, { plaza: false }); const tSpots = TOWN ? (MAPDEF.streets || []) : SPOTS; this.terrain = KTTerrain.init(this, { N, TW, TH, village: tVil, spots: tSpots, seed: (MAPCFG.seed || 7), river: TOWN ? MAPDEF.river : null, plate: (MAPDEF.plate && this.textures.exists('map-plate')) ? 'map-plate' : null, tiles: (MAPDEF.tileLayer && !/[?&]notile=1/.test(location.search)) ? { stone: ['tile-stone-a', 'tile-stone-b'].map(k => this.textures.get(k).getSourceImage()), dirt: ['tile-dirt-a', 'tile-dirt-b'].map(k => this.textures.get(k).getSourceImage()) } : null }); }
     if (false)
     if (this.textures.exists('sec0')) { const COLS = 3, ROWS = 3;
       const W0 = (N * TW) / COLS, H0 = (N * TH) / ROWS, X0 = -N * TW / 2;
