@@ -1189,7 +1189,10 @@ class Main extends Phaser.Scene {
     const h = this.hero;
     // parallax: dải núi xa trôi chậm hơn map -> tạo chiều sâu
     if (this._back) { const scx = this.cameras.main.scrollX; for (const l of this._back) l.g.x = -scx * l.k; }
-    // sân đấu: khi boss đang truy đuổi thì giữ nhân vật trong vòng (muốn bỏ chạy cứ chạy ra mép,
+    // CAMERA THẤP: kéo giãn trục dọc (zoomY > zoomX) -> nhìn thấy mặt đứng nhiều hơn, map có chiều sâu.
+    // setZoom() ở nơi khác sẽ ghi đè zoomY, nên mỗi khung hình kiểm lại một lần (rẻ).
+    { const cam = this.cameras.main, tilt = /[?&]notilt=1/.test(location.search) ? 1 : (MAPDEF.camTilt || 1.12);
+      if (Math.abs(cam.zoomY - cam.zoomX * tilt) > 0.001) cam.zoomY = cam.zoomX * tilt; }    // sân đấu: khi boss đang truy đuổi thì giữ nhân vật trong vòng (muốn bỏ chạy cứ chạy ra mép,
     // boss leash về chỗ cũ rồi vòng sẽ nhả) — không nhốt người chơi vĩnh viễn trong sân
     if (MAPDEF.arenaRadius && this.mobs.some(m => m.isBoss && !m.dead && m.state === 'chase')) {
       const adx = h.c - VILLAGE.c, adr = h.r - VILLAGE.r, AR = MAPDEF.arenaRadius, add = Math.hypot(adx, adr);
