@@ -818,6 +818,38 @@ class Main extends Phaser.Scene {
       g.fillStyle(0x000000, 0.22);
       g.beginPath(); g.moveTo(D[0], D[1] + 4); g.lineTo(C[0], C[1] + 4); g.lineTo(B[0], B[1] + 4);
       g.lineTo(B[0] + 10, B[1] + 10); g.lineTo(C[0], C[1] + 12); g.lineTo(D[0] - 10, D[1] + 10); g.closePath(); g.fillPath();
+      // KHỐI ĐÁ LỒI LÕM: dải dọc lệch sáng + gờ đá nhô ở chân vách, vẽ trên texture vách với alpha thấp
+      const g2 = /[?&]flatwall=1/.test(location.search) ? null : this.add.graphics().setDepth(-8.565e5);
+      const rnd = (i) => { const x = Math.sin(i * 12.9898 + z.c * 78.233 + z.r * 37.719) * 43758.5453; return x - Math.floor(x); };
+      const shade = (c0, f) => {
+        const rr = Math.max(0, Math.min(255, Math.round(((c0 >> 16) & 255) * f)));
+        const gg = Math.max(0, Math.min(255, Math.round(((c0 >> 8) & 255) * f)));
+        const bb = Math.max(0, Math.min(255, Math.round((c0 & 255) * f)));
+        return (rr << 16) | (gg << 8) | bb;
+      };
+      for (const [p1, p2, base] of (g2 ? [[D, C, 0x4a3b32], [C, B, 0x3a2e27]] : [])) {
+        const dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+        const steps = Math.max(6, Math.round(Math.hypot(dx, dy) / 20));
+        for (let i = 0; i < steps; i++) {
+          const t0 = i / steps, t1 = (i + 1) / steps;
+          const ax = p1[0] + dx * t0, ay = p1[1] + dy * t0, bx = p1[0] + dx * t1, by = p1[1] + dy * t1;
+          g2.fillStyle(shade(base, 1.28 + rnd(i) * 0.55), 0.45);
+          g2.beginPath(); g2.moveTo(ax, ay - lv); g2.lineTo(bx, by - lv); g2.lineTo(bx, by); g2.lineTo(ax, ay); g2.closePath(); g2.fillPath();
+          if (rnd(i + 97) < 0.4) {
+            const mx = p1[0] + dx * ((t0 + t1) / 2), my = p1[1] + dy * ((t0 + t1) / 2);
+            const hh2 = lv * (0.22 + rnd(i + 51) * 0.4), out = 3 + rnd(i + 13) * 6;
+            g2.fillStyle(shade(base, 0.55 + rnd(i + 7) * 0.35), 0.8);
+            g2.beginPath();
+            g2.moveTo(mx - 5, my - hh2); g2.lineTo(mx + 5, my - hh2);
+            g2.lineTo(mx + 7, my + out); g2.lineTo(mx - 7, my + out);
+            g2.closePath(); g2.fillPath();
+          }
+        }
+        g2.lineStyle(1, 0x241b16, 0.30);
+        for (const fy of [0.34, 0.66]) {
+          g2.beginPath(); g2.moveTo(p1[0], p1[1] - lv * (1 - fy)); g2.lineTo(p2[0], p2[1] - lv * (1 - fy)); g2.strokePath();
+        }
+      }
     }
     // dốc: vẽ vệt sáng để người chơi thấy lối lên
     g.fillStyle(0x8c7a62, 0.85);
