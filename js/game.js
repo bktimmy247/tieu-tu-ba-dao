@@ -544,7 +544,12 @@ class Main extends Phaser.Scene {
       this.props.push({ s, sh: this.add.image(x + (isV ? 0 : 10), y + 2, 'shadow').setScale(shs, shs * 0.9).setAlpha(isV ? 0.55 : 1).setDepth(-8e5), c, r, fish: p === 'v-fish', homeX: x, homeY: y + 6, phase: hash(c, r, 29) * Math.PI * 2 });
       nObj++;
     }
-    if (window.KTReeds && !TOWN) { try { const rd = MAPDEF.reeds || {}; KTReeds.init(this, { map, G, N, isoX, isoY, village: VILLAGE, spots: SPOTS, seed: MAPCFG.seed, count: (rd.count === undefined ? 90 : rd.count), centerClear: rd.centerClear || 9 }); } catch (e) { console.error('reeds', e); } }
+    // Độ bão hoà theo map (MAPDEF.sat, 1 = giữ nguyên). Đo ảnh tham chiếu: map của họ
+    // có sat ~141-187, TTBD chỉ 114 -> Hỏa Sơn cần +22%.
+    if (MAPDEF.sat) {
+      try { const fx = this.cameras.main.postFX; if (fx && fx.addColorMatrix) fx.addColorMatrix().saturate(MAPDEF.sat - 1); } catch (e) { }
+    }
+    if (window.KTReeds && !TOWN) { try { const rd = MAPDEF.reeds || {}; KTReeds.init(this, { map, G, N, isoX, isoY, village: VILLAGE, spots: SPOTS, seed: MAPCFG.seed, ink: !!MAPDEF.ink, count: (rd.count === undefined ? 90 : rd.count), centerClear: rd.centerClear || 9 }); } catch (e) { console.error('reeds', e); } }
     this.stats = { nGround, nDeco: map.deco.length, nObj, groundMs, groundTex: gt.w + '×' + gt.h, obstacles: this.obs.list.length };
 
     // nhân vật
@@ -1334,8 +1339,8 @@ class Main extends Phaser.Scene {
       grd.addColorStop(1, 'rgba(214,222,226,0)');
       cx.fillStyle = grd; cx.fillRect(0, 0, 8, 256); cv.refresh();
     }
-    const mist = this.add.image(W / 2, 0, key).setOrigin(0.5, 0).setDisplaySize(W, H * 0.32)
-      .setScrollFactor(0).setDepth(-1.18e6).setAlpha(0.32);
+    const mist = this.add.image(W / 2, 0, key).setOrigin(0.5, 0).setDisplaySize(W, H * 0.40)
+      .setScrollFactor(0).setDepth(-1.18e6).setAlpha(0.42);
     this._back = layers; this._mist = mist;
   }
 

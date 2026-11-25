@@ -81,5 +81,6 @@
   "tint": 16855488,
   "scale": 1.55
  },
- "arenaRadius": 16
+ "arenaRadius": 16,
+ "ink": true
 }

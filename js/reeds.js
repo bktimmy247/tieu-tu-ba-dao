@@ -94,9 +94,12 @@
         if (k.a !== ta) { k.a += (ta - k.a) * 0.25; if (Math.abs(k.a - ta) < 0.02) k.a = ta; s.setAlpha(k.a); }
       }
     });
-    // thủy mặc: giảm bão hoà nhẹ toàn cảnh (nếu Phaser có postFX)
+    // Thủy mặc (ink-wash) CHỈ khi map yêu cầu: map.ink === true. Trước đây áp cho mọi map
+    // -> Hỏa Sơn / Thiết Cốc bị bạc màu 28% mà không ai gọi tên.
     let ink = false;
-    try { const fx = scene.cameras.main.postFX; if (fx && fx.addColorMatrix) { fx.addColorMatrix().saturate(-0.28); ink = true; } } catch (e) { }
+    if (o.ink) {
+      try { const fx = scene.cameras.main.postFX; if (fx && fx.addColorMatrix) { fx.addColorMatrix().saturate(-0.28); ink = true; } } catch (e) { }
+    }
     scene.reeds = { count: clumps.length, clumps, ink };
     return scene.reeds;
   }
