@@ -783,8 +783,10 @@ class Main extends Phaser.Scene {
       g.beginPath(); g.moveTo(A[0], A[1] - lv); g.lineTo(B[0], B[1] - lv); g.lineTo(C[0], C[1] - lv); g.lineTo(D[0], D[1] - lv); g.closePath(); g.fillPath();
       g.lineStyle(2, 0x9c8a74, 0.8);
       g.beginPath(); g.moveTo(A[0], A[1] - lv); g.lineTo(B[0], B[1] - lv); g.lineTo(C[0], C[1] - lv); g.lineTo(D[0], D[1] - lv); g.closePath(); g.strokePath();
-      // BỀ MẶT CÓ VÂN: phủ texture cỏ/đá lên mặt trên + hai mặt đứng, cắt bằng mask hình thoi
-      const texTop = this.textures.exists('g-grass') ? 'g-grass' : null;
+      // BỀ MẶT CÓ VÂN: vật liệu theo map (elevation.mat: stone|dirt|grass). Hỏa Sơn/Thiết Cốc
+      // là đá/kim loại nên KHÔNG dùng cỏ -> trước đây mặt cao nguyên xanh lè, lệch hẳn với map.
+      const mat = /[?&]grassmat=1/.test(location.search) ? 'grass' : (E.mat || 'stone');
+      const texTop = this.textures.exists('g-' + mat) ? 'g-' + mat : null;
       const texWall = this.textures.exists('g-stone') ? 'g-stone' : null;
       const pts = [[A[0], A[1] - lv], [B[0], B[1] - lv], [C[0], C[1] - lv], [D[0], D[1] - lv]];
       if (texTop) {
@@ -793,6 +795,9 @@ class Main extends Phaser.Scene {
         const w = Math.max(...xs) - Math.min(...xs), hh = Math.max(...ys) - Math.min(...ys);
         if (w > 4 && hh > 4) {
           const ts = this.add.tileSprite(cx, cy, w, hh, texTop).setDepth(-8.55e5).setAlpha(0.75);
+          // Tối theo map: Hỏa Sơn nền rất tối (mean 57) nên mặt cao nguyên phải tối theo,
+          // nếu không nó thành "miếng dán sáng" giữa map.
+          if (E.topTint) { try { ts.setTint(parseInt(E.topTint, 16)); } catch (e) { } }
           const mg = this.make.graphics({ add: false }); mg.fillStyle(0xffffff);
           mg.fillPoints(pts.map(p => ({ x: p[0], y: p[1] })), true);
           ts.setMask(mg.createGeometryMask());
